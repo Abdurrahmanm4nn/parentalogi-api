@@ -11,6 +11,7 @@ let cors = require("cors");
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+const Users = require('./models/users');
 
 var app = express();
 
@@ -43,12 +44,24 @@ supertokens.init({
 
                   // Post sign up response, we check if it was successful                            
                   if (response.status === "OK") {                                
-                    let { id, email, password } = response.user;
+                    let { id, email, password, username, name } = response.user;
                     // // These are the input form fields values that the user used while signing up                                
                     let formFields = input.formFields;                                
                     
-                    // TODO: post sign up logic
-                                           
+                    // TODO: post sign up logic                   
+                    Users.update(
+                      {
+                        nama_pengguna: username, 
+                        nama: name
+                      },
+                      {
+                        where: {
+                          email: email,
+                          password_hash: password
+                        }
+                      }
+                    );
+                    
                   }                               
                   return response;                        
                 },

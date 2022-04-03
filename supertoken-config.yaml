@@ -1,0 +1,9 @@
+core_config_version: 0
+port: 3002
+mysql_user: "root"
+mysql_password: ""
+mysql_host: 127.0.0.1
+mysql_port: 3306
+mysql_database_name: "parentalogi"
+mysql_emailpassword_users_table_name: "users"
+mysql_emailpassword_pswd_reset_tokens_table_name: "password_resets"
