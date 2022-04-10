@@ -5,19 +5,19 @@ const sequelize = require("sequelize");
 module.exports = {
   async up (queryInterface, Sequelize) {
     queryInterface.changeColumn('users', 'time_joined', {
-      type: Sequelize.BIGINT(20),
-      defaultValue: sequelize.fn('NOW'),
+      type: Sequelize.BIGINT,
+      defaultValue: 0,
       allowNull: false
     });
     await queryInterface.addColumn('users', 'nama_pengguna', { 
       type: Sequelize.STRING(30), 
       allowNull: false,
-      defaultValue: sequelize.col('user_id')
+      defaultValue: ''
     });
     await queryInterface.addColumn('users', 'nama', { 
       type: Sequelize.STRING(30), 
       allowNull: false,
-      defaultValue: sequelize.col('email')
+      defaultValue: ''
     });
     await queryInterface.addColumn('users', 'bio', { 
       type: Sequelize.STRING(200), defaultValue: null }
