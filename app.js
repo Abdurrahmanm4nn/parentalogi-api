@@ -31,10 +31,21 @@ supertokens.init({
         websiteBasePath: "/",
     },
     recipeList: [
-        EmailPassword.init({            
+        EmailPassword.init({
+          signUpFeature: {
+            formFields: [
+              {
+                id: "nama_pengguna"
+              },
+              {
+                id: "nama"
+              }
+            ]
+          },
           override: {                
             apis: (originalImplementation) => {                    
               return {                                                
+                ...originalImplementation,
                 signUpPOST: async function (input) {
                   if (originalImplementation.signUpPOST === undefined) {                                
                     throw Error("Should never come here");                            
@@ -44,24 +55,20 @@ supertokens.init({
 
                   // Post sign up response, we check if it was successful                            
                   if (response.status === "OK") {                                
-                    let { id, email, password, username, name } = response.user;
                     // // These are the input form fields values that the user used while signing up                                
                     let formFields = input.formFields;                                
-                    
-                    // TODO: post sign up logic                   
+                    // TODO: post sign up logic
                     Users.update(
                       {
-                        nama_pengguna: username, 
-                        nama: name
+                        nama_pengguna : formFields.filter((f) => f.id === "nama_pengguna")[0].value, 
+                        nama : formFields.filter((f) => f.id === "nama")[0].value
                       },
                       {
-                        where: {
-                          email: email,
-                          password_hash: password
+                        where : {
+                          email : formFields.filter((f) => f.id === "email")[0].value
                         }
                       }
-                    );
-                    
+                    )
                   }                               
                   return response;                        
                 },

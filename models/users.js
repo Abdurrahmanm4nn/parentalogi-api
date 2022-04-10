@@ -1,5 +1,6 @@
+require('dotenv').config();
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize('mysql::memory:');
+const sequelize = new Sequelize(process.env.DB_URI);
 
 const Users = sequelize.define('users', {
     id: {
