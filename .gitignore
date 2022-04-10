@@ -102,3 +102,6 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Supertoken config file
+supertoken-config.yaml
