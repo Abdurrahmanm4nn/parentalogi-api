@@ -87,6 +87,24 @@ supertokens.init({
                     // TODO: post sign in logic                            
                   }                            
                   return response;                        
+                },
+                emailVerificationFeature: {                    
+                  functions: (originalImplementationEmailVerification) => {                        
+                    return {                            
+                      ...originalImplementationEmailVerification,                            
+                      isEmailVerified: async function (input) {                                
+                        // TODO: some custom logic
+
+
+                        // or call the default behaviour as show below                                
+                        return await originalImplementationEmailVerification.isEmailVerified(input);                            
+                      },                            
+                      // ...                            
+                      // TODO: override more functions
+                      
+                      
+                    }                    
+                  }                
                 }                    
               }                
             }            
