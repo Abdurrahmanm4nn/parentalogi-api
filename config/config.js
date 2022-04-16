@@ -6,7 +6,12 @@ const {
   DB_HOSTNAME,
   DB_NAME,
   DB_DIALECT,
-  DB_URI
+  DB_URI,
+  EMAIL_USER,
+  EMAIL_PASS,
+  API_DOMAIN,
+  WEB_DOMAIN,
+  ST_URI
 } = process.env;
 
 module.exports = {
@@ -16,7 +21,12 @@ module.exports = {
     "database": DB_NAME,
     "host": DB_HOSTNAME,
     "dialect": DB_DIALECT,
-    "uri": DB_URI
+    "db_uri": DB_URI,
+    "email_user": EMAIL_USER,
+    "email_pass": EMAIL_PASS,
+    "api_domain": API_DOMAIN,
+    "web_domain": WEB_DOMAIN,
+    "supertokens_uri": ST_URI
   },
   "test": {
     "username": "root",

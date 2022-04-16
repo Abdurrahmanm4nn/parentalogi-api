@@ -1,7 +1,7 @@
 core_config_version: 0
 port: 3002
-mysql_user: "root"
-mysql_password: ""
+mysql_user: "ic"
+mysql_password: "letmein"
 mysql_host: 127.0.0.1
 mysql_port: 3306
 mysql_database_name: "parentalogi"

@@ -1,5 +1,7 @@
 require('dotenv').config();
-var express = require('express');
+const express = require('express');
+const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -8,25 +10,37 @@ let Session = require("supertokens-node/recipe/session");
 let EmailPassword = require("supertokens-node/recipe/emailpassword");
 let { middleware } = require("supertokens-node/framework/express");
 let cors = require("cors");
-
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const Users = require('./models/users');
 
 var app = express();
+app.use(middleware());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+const transporter = nodemailer.createTransport({
+  port: 465,               // true for 465, false for other ports
+  host: "smtp.gmail.com",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  secure: true,
+});
 
 supertokens.init({
     framework: "express",
     supertokens: {
         // try.supertokens.com is for demo purposes. Replace this with the address of your core instance (sign up on supertokens.com), or self host a core.
-        connectionURI: "https://icvmdev.duckdns.org/supertokens",
+        connectionURI: process.env.ST_URI,
         // apiKey: "IF YOU HAVE AN API KEY FOR THE CORE, ADD IT HERE",
     },
     appInfo: {
         // learn more about this on https://supertokens.com/docs/session/appinfo
         appName: "parentalogi-api",
-        apiDomain: "https://icvmdev.duckdns.org/api",
-        websiteDomain: "https://icvmdev.duckdns.org",
+        apiDomain: process.env.API_DOMAIN,
+        websiteDomain: process.env.WEB_DOMAIN,
         apiBasePath: "/",
         websiteBasePath: "/",
     },
@@ -42,7 +56,54 @@ supertokens.init({
               }
             ]
           },
-          override: {                
+          emailVerificationFeature: {
+            createAndSendCustomEmail: async (user, emailVerificationURLWithToken) => {                    
+              let { id, email } = user;                    
+              // TODO:
+              let url = emailVerificationURLWithToken;
+              const mailData = {
+                from: process.env.EMAIL_USER,  // sender address
+                to: email,   // list of receivers
+                subject: 'Email verification instructions',
+                text: 'Please verify your email!',
+                html: `<b>Dear ${email} </b><br> Please verify your email by clicking the link below!<br/><b>${url}</b>`,
+              };
+              transporter.sendMail(mailOptions, function (err, info) {
+                if(err){
+                  return res.status(500).send(err);
+                }
+                return res.status(200).send({message: "Verification email sent!", message_id: info.messageId});
+              });
+            },            
+          },
+          resetPasswordUsingTokenFeature: {
+            // This function is used to generate the password reset link                
+            getResetPasswordURL: async (user) => {                    
+              let { email, id } = user;                    
+              return "https://example.com/custom-reset-password-path";                
+            }            
+          }, 
+          override: {
+            emailVerificationFeature: {                    
+              apis: (originalImplementation) => {                        
+                return {                            
+                  ...originalImplementation,                            
+                  verifyEmailPOST: async function (input) {
+                    if (originalImplementation.verifyEmailPOST === undefined) {                                    
+                      throw Error("Should never come here");                                
+                    }
+                    // First we call the original implementation                                
+                    let response = await originalImplementation.verifyEmailPOST(input);
+                    // Then we check if it was successfully completed                                
+                    if (response.status === "OK") {                                    
+                      let { id, email } = response.user;                                    
+                      // TODO: post email verification logic                                
+                    }                                
+                    return response;                            
+                  }                        
+                }                    
+              }               
+            },                
             apis: (originalImplementation) => {                    
               return {                                                
                 ...originalImplementation,
@@ -87,32 +148,12 @@ supertokens.init({
                     // TODO: post sign in logic                            
                   }                            
                   return response;                        
-                },
-                emailVerificationFeature: {                    
-                  functions: (originalImplementationEmailVerification) => {                        
-                    return {                            
-                      ...originalImplementationEmailVerification,                            
-                      isEmailVerified: async function (input) {                                
-                        // TODO: some custom logic
-
-
-                        // or call the default behaviour as show below                                
-                        return await originalImplementationEmailVerification.isEmailVerified(input);                            
-                      },                            
-                      // ...                            
-                      // TODO: override more functions
-                      
-                      
-                    }                    
-                  }                
-                }                    
+                }                 
               }                
             }            
           }        
         }), // initializes signin / sign up features
-        Session.init({
-
-        }) // initializes session features
+        Session.init() // initializes session features
     ]
 });
 
@@ -126,7 +167,6 @@ app.use(
  })
 );
 
-app.use(middleware());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
