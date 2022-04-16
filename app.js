@@ -57,6 +57,12 @@ supertokens.init({
             ]
           },
           emailVerificationFeature: {
+            getEmailVerificationURL: async (user) => {
+              let { email, id } = user;
+              let baseUrl = process.env.WEB_DOMAIN;
+              let url = baseUrl.concat("/auth/email-verify");                  
+              return url;
+            },
             createAndSendCustomEmail: async (user, emailVerificationURLWithToken) => {                    
               let { id, email } = user;                    
               // TODO:
@@ -68,20 +74,40 @@ supertokens.init({
                 text: 'Please verify your email!',
                 html: `<b>Dear ${email} </b><br> Please verify your email by clicking the link below!<br/><b>${url}</b>`,
               };
-              transporter.sendMail(mailOptions, function (err, info) {
+              transporter.sendMail(mailData, function (err, info) {
                 if(err){
-                  return res.status(500).send(err);
+                  return app.response.status(500).send(err);
                 }
-                return res.status(200).send({message: "Verification email sent!", message_id: info.messageId});
+                return app.response.status(200).send({message: "Verification email sent!", message_id: info.messageId});
               });
             },            
           },
           resetPasswordUsingTokenFeature: {
             // This function is used to generate the password reset link                
             getResetPasswordURL: async (user) => {                    
-              let { email, id } = user;                    
-              return "https://example.com/custom-reset-password-path";                
-            }            
+              let { email, id } = user;
+              let baseUrl = process.env.WEB_DOMAIN;
+              let url = baseUrl.concat("/password-reset");                  
+              return url;                
+            },
+            createAndSendCustomEmail: async (user, passwordResetURLWithToken) => {                    
+              let { id, email } = user;                    
+              // TODO:
+              let url = passwordResetURLWithToken;
+              const mailData = {
+                from: process.env.EMAIL_USER,  // sender address
+                to: email,   // list of receivers
+                subject: 'Reset password instructions',
+                text: 'Reset your password!',
+                html: `<b>Dear ${email} </b><br> Please reset your password by clicking the link below!<br/><b>${url}</b>`,
+              };
+              transporter.sendMail(mailData, function (err, info) {
+                if(err){
+                  console.log(err);
+                }
+                console.log(info);
+              });
+            },            
           }, 
           override: {
             emailVerificationFeature: {                    
@@ -122,7 +148,8 @@ supertokens.init({
                     Users.update(
                       {
                         nama_pengguna : formFields.filter((f) => f.id === "nama_pengguna")[0].value, 
-                        nama : formFields.filter((f) => f.id === "nama")[0].value
+                        nama : formFields.filter((f) => f.id === "nama")[0].value,
+                        status: "ACTIVE"
                       },
                       {
                         where : {

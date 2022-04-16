@@ -10,7 +10,9 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 router.post("/refresh", middleware(), (req, res) => {
-    res.send('refreshing token');
+  
+  res.send('refreshing token');
+
 });
 router.post("/change-password", verifySession(), async (SessionRequest, res) => {     
     // get the supertokens session object from the req    
