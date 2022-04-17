@@ -78,9 +78,9 @@ supertokens.init({
               };
               transporter.sendMail(mailData, function (err, info) {
                 if(err){
-                  console.log(err);
+                  return app.response.status(500).send(err);
                 }
-                console.log(info);
+                return app.response.status(200).send(info);
               });
             },            
           }, 
