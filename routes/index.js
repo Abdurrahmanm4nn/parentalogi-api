@@ -3,7 +3,7 @@ var router = express.Router();
 var EmailPassword = require('supertokens-node/recipe/emailpassword');
 let { errorHandler, middleware, SessionRequest } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
-const Posts = require('./../models/Posts');
+const Posts = require('./../models/posts');
 let app = express();
 
 /* GET home page. */
@@ -26,12 +26,12 @@ router.post("/refresh", verifySession({sessionRequired: false}), async (req= Ses
     let userId = req.session.getUserId();
     let role = "admin"; // TODO: fetch based on user
 
-    // Note that this will override any existing access token payload    
-    // that you may have provided earlier.    
-    await req.session.updateAccessTokenPayload(        
-      { 
-        role 
-      }    
+    // Note that this will override any existing access token payload
+    // that you may have provided earlier.
+    await req.session.updateAccessTokenPayload(
+      {
+        role
+      }
     );
     //....
 });
