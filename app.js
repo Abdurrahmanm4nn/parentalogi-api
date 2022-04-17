@@ -13,6 +13,7 @@ let cors = require("cors");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const Users = require('./models/users');
+const { getUserById } = require('supertokens-node/recipe/emailpassword');
 
 var app = express();
 app.use(middleware());
@@ -56,32 +57,6 @@ supertokens.init({
               }
             ]
           },
-          emailVerificationFeature: {
-            getEmailVerificationURL: async (user) => {
-              let { email, id } = user;
-              let baseUrl = process.env.WEB_DOMAIN;
-              let url = baseUrl.concat("/auth/email-verify");                  
-              return url;
-            },
-            createAndSendCustomEmail: async (user, emailVerificationURLWithToken) => {                    
-              let { id, email } = user;                    
-              // TODO:
-              let url = emailVerificationURLWithToken;
-              const mailData = {
-                from: process.env.EMAIL_USER,  // sender address
-                to: email,   // list of receivers
-                subject: 'Email verification instructions',
-                text: 'Please verify your email!',
-                html: `<b>Dear ${email} </b><br> Please verify your email by clicking the link below!<br/><b>${url}</b>`,
-              };
-              transporter.sendMail(mailData, function (err, info) {
-                if(err){
-                  return app.response.status(500).send(err);
-                }
-                return app.response.status(200).send({message: "Verification email sent!", message_id: info.messageId});
-              });
-            },            
-          },
           resetPasswordUsingTokenFeature: {
             // This function is used to generate the password reset link                
             getResetPasswordURL: async (user) => {                    
@@ -111,22 +86,46 @@ supertokens.init({
           }, 
           override: {
             emailVerificationFeature: {                    
-              apis: (originalImplementation) => {                        
+              apis: (originalImplementationEmailVerification) => {                        
                 return {                            
-                  ...originalImplementation,                            
+                  ...originalImplementationEmailVerification,                            
+                  getEmailVerificationURL: async (user) => {
+                    let { email, id } = user;
+                    let baseUrl = process.env.WEB_DOMAIN;
+                    let url = baseUrl.concat("/auth/email-verify");                  
+                    return url;
+                  },
+                  createAndSendCustomEmail: async (user, emailVerificationURLWithToken) => {                    
+                    let { id, email } = user;                    
+                    // TODO:
+                    let url = emailVerificationURLWithToken;
+                    const mailData = {
+                      from: process.env.EMAIL_USER,  // sender address
+                      to: email,   // list of receivers
+                      subject: 'Email verification instructions',
+                      text: 'Please verify your email!',
+                      html: `<b>Dear ${email} </b><br> Please verify your email by clicking the link below!<br/><b>${url}</b>`,
+                    };
+                    transporter.sendMail(mailData, function (err, info) {
+                      if(err){
+                        return app.response.status(500).send(err);
+                      }
+                      return app.response.status(200).send({message: "Verification email sent!", message_id: info.messageId});
+                    });
+                  },
                   verifyEmailPOST: async function (input) {
-                    if (originalImplementation.verifyEmailPOST === undefined) {                                    
+                    if (originalImplementationEmailVerification.verifyEmailPOST === undefined) {                                    
                       throw Error("Should never come here");                                
                     }
                     // First we call the original implementation                                
-                    let response = await originalImplementation.verifyEmailPOST(input);
+                    let response = await originalImplementationEmailVerification.verifyEmailPOST(input);
                     // Then we check if it was successfully completed                                
                     if (response.status === "OK") {                                    
                       let { id, email } = response.user;                                    
                       // TODO: post email verification logic                                
                     }                                
                     return response;                            
-                  }                        
+                  },                         
                 }                    
               }               
             },                
@@ -145,18 +144,22 @@ supertokens.init({
                     // // These are the input form fields values that the user used while signing up                                
                     let formFields = input.formFields;                                
                     // TODO: post sign up logic
-                    Users.update(
-                      {
-                        nama_pengguna : formFields.filter((f) => f.id === "nama_pengguna")[0].value, 
-                        nama : formFields.filter((f) => f.id === "nama")[0].value,
-                        status: "ACTIVE"
-                      },
-                      {
-                        where : {
-                          email : formFields.filter((f) => f.id === "email")[0].value
+                    try{
+                      Users.update(
+                        {
+                          nama_pengguna : formFields.filter((f) => f.id === "nama_pengguna")[0].value, 
+                          nama : formFields.filter((f) => f.id === "nama")[0].value,
+                          status: "ACTIVE"
+                        },
+                        {
+                          where : {
+                            email : formFields.filter((f) => f.id === "email")[0].value
+                          }
                         }
-                      }
-                    )
+                      )
+                    }catch (e){
+                      return express.response.status(500).send(e);
+                    }
                   }                               
                   return response;                        
                 },
@@ -175,12 +178,38 @@ supertokens.init({
                     // TODO: post sign in logic                            
                   }                            
                   return response;                        
-                }                 
+                },
+                createNewSession: async function (input) {                            
+                  let userId = input.userId;
+                  let role = "admin"; // TODO: fetch role based on userId
+                  input.accessTokenPayload = {                                
+                    ...input.accessTokenPayload,                                
+                    role                            
+                  };
+                  return originalImplementation.createNewSession(input);                        
+                },                 
               }                
             }            
           }        
         }), // initializes signin / sign up features
-        Session.init() // initializes session features
+        Session.init({
+          override: {                
+            functions: (originalImplementation) => {                    
+              return {                        
+                ...originalImplementation,                        
+                createNewSession: async function (input) {                            
+                  let userId = input.userId;
+                  let role = "admin"; // TODO: fetch role based on userId
+                  input.accessTokenPayload = {                                
+                    ...input.accessTokenPayload,                                
+                    role     
+                  };
+                  return originalImplementation.createNewSession(input);                        
+                },                    
+              };                
+            },            
+          },
+        }) // initializes session features
     ]
 });
 

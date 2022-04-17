@@ -1,14 +1,19 @@
 require('dotenv').config();
+const env = process.env.NODE_ENV || 'development';
+const config = require(__dirname + '/../config/config')[env];
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USERNAME, process.env.DB_PASSWORD, 
+const sequelize = new Sequelize(
+  config.database, 
+  config.username, 
+  config.password,
   {
-    host: 'localhost',
-    dialect: 'mysql'
+    host: config.host,
+    dialect: config.dialect
   }
 );
 
 const Users = sequelize.define('users', {
-    id: {
+    user_id: {
         type: Sequelize.INTEGER(11),
         primaryKey: true,
         autoIncrement: true,
@@ -19,7 +24,7 @@ const Users = sequelize.define('users', {
         allowNull: false,
         unique: true
       },
-      password: { type: Sequelize.STRING(128), allowNull: false },
+      password_hash: { type: Sequelize.STRING(128), allowNull: false },
       nama_pengguna: { type: Sequelize.STRING(30), allowNull: false },
       nama: { type: Sequelize.STRING(30), allowNull: false },
       bio: { type: Sequelize.STRING(200), defaultValue: null },
@@ -32,5 +37,19 @@ const Users = sequelize.define('users', {
       waktu_terakhir_ubah_password: { type: Sequelize.DATE, allowNull: false },
       status: {type: Sequelize.ENUM('ACTIVE','BANNED','DELETED',''), allowNull: false }
 })
+
+Users.addScope('profile', 
+  { 
+   attributes: { 
+     exclude: [
+      'password_hash', 
+      'user_id', 
+      'createdAt', 
+      'updatedAt', 
+      'waktu_terakhir_ubah_password', 
+      'status'
+    ] } 
+  }
+);
 
 module.exports = Users;
