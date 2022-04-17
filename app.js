@@ -99,6 +99,12 @@ supertokens.init({
                     let { id, email } = user;                    
                     // TODO:
                     let url = emailVerificationURLWithToken;
+
+                    let userInfo = await EmailPassword.getUserByEmail(email);
+                    if (userInfo === undefined) {        
+                      return app.response.status(401).json({Message: "Email is not registered!!"});  
+                    }
+
                     const mailData = {
                       from: process.env.EMAIL_USER,  // sender address
                       to: email,   // list of receivers
