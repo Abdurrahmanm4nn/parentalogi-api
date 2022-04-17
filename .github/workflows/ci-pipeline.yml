@@ -15,7 +15,7 @@ jobs:
       NODE_ENV: test
       DB_TEST_USERNAME: ${{secrets.DB_TEST_USERNAME}}
       DB_TEST_PASSWORD: ${{secrets.DB_TEST_PASSWORD}}
-      DB_TEST_HOSTNAME: https://icvmdev.duckdns.org
+      DB_TEST_HOSTNAME: icvmdev.duckdns.org
       DB_TEST_NAME: parentalogi_test
       DB_TEST_DIALECT: mysql
       EMAIL_USER: ${{secrets.EMAIL_USER}}

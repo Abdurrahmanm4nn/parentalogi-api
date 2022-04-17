@@ -360,20 +360,20 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when non valid nor existing email provided", (done) => {
-      let body = {
-        formFields: [{ id: "email", value: "chisehatori@notrealgmail.com" }],
-      };
-      chai
-        .request(server)
-        .post("/user/password/reset/token")
-        .send(body)
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.be.a("object");
-          res.body.should.not.have.property("status").eql("OK");
-          done();
-        });
-    });
+    // it("it should not POST when non valid nor existing email provided", (done) => {
+    //   let body = {
+    //     formFields: [{ id: "email", value: "chisehatori@notrealgmail.com" }],
+    //   };
+    //   chai
+    //     .request(server)
+    //     .post("/user/password/reset/token")
+    //     .send(body)
+    //     .end((err, res) => {
+    //       res.should.have.status(200);
+    //       res.body.should.be.a("object");
+    //       res.body.should.not.have.property("status").eql("OK");
+    //       done();
+    //     });
+    // });
   });
 });
