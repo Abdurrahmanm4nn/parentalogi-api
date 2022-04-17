@@ -28,7 +28,7 @@ router.get("/profile", verifySession(), async (req, res) => {
   }catch (e){
     return res.status(500).send(e);
   }
-  return res.status(200).json(profile);
+  return res.status(200).json(profile[0]);
 });
 router.put("/edit-profile", verifySession({sessionRequired: false}), async (req, res) => {
   // get the supertokens session object from the req
