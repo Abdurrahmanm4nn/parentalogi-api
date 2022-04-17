@@ -58,15 +58,15 @@ supertokens.init({
             ]
           },
           resetPasswordUsingTokenFeature: {
-            // This function is used to generate the password reset link                
-            getResetPasswordURL: async (user) => {                    
+            // This function is used to generate the password reset link
+            getResetPasswordURL: async (user) => {
               let { email, id } = user;
               let baseUrl = process.env.WEB_DOMAIN;
-              let url = baseUrl.concat("/password-reset");                  
-              return url;                
+              let url = baseUrl.concat("/password-reset");
+              return url;
             },
-            createAndSendCustomEmail: async (user, passwordResetURLWithToken) => {                    
-              let { id, email } = user;                    
+            createAndSendCustomEmail: async (user, passwordResetURLWithToken) => {
+              let { id, email } = user;
               // TODO:
               let url = passwordResetURLWithToken;
               const mailData = {
@@ -82,27 +82,27 @@ supertokens.init({
                 }
                 return app.response.status(200).send(info);
               });
-            },            
-          }, 
+            },
+          },
           override: {
-            emailVerificationFeature: {                    
-              apis: (originalImplementationEmailVerification) => {                        
-                return {                            
-                  ...originalImplementationEmailVerification,                            
+            emailVerificationFeature: {
+              apis: (originalImplementationEmailVerification) => {
+                return {
+                  ...originalImplementationEmailVerification,
                   getEmailVerificationURL: async (user) => {
                     let { email, id } = user;
                     let baseUrl = process.env.WEB_DOMAIN;
-                    let url = baseUrl.concat("/auth/email-verify");                  
+                    let url = baseUrl.concat("/auth/email-verify");
                     return url;
                   },
-                  createAndSendCustomEmail: async (user, emailVerificationURLWithToken) => {                    
-                    let { id, email } = user;                    
+                  createAndSendCustomEmail: async (user, emailVerificationURLWithToken) => {
+                    let { id, email } = user;
                     // TODO:
                     let url = emailVerificationURLWithToken;
 
                     let userInfo = await EmailPassword.getUserByEmail(email);
-                    if (userInfo === undefined) {        
-                      return app.response.status(401).json({Message: "Email is not registered!!"});  
+                    if (userInfo === undefined) {
+                      return app.response.status(401).json({Message: "Email is not registered!!"});
                     }
 
                     const mailData = {
@@ -120,40 +120,40 @@ supertokens.init({
                     });
                   },
                   verifyEmailPOST: async function (input) {
-                    if (originalImplementationEmailVerification.verifyEmailPOST === undefined) {                                    
-                      throw Error("Should never come here");                                
+                    if (originalImplementationEmailVerification.verifyEmailPOST === undefined) {
+                      throw Error("Should never come here");
                     }
-                    // First we call the original implementation                                
+                    // First we call the original implementation
                     let response = await originalImplementationEmailVerification.verifyEmailPOST(input);
-                    // Then we check if it was successfully completed                                
-                    if (response.status === "OK") {                                    
-                      let { id, email } = response.user;                                    
-                      // TODO: post email verification logic                                
-                    }                                
-                    return response;                            
-                  },                         
-                }                    
-              }               
-            },                
-            apis: (originalImplementation) => {                    
-              return {                                                
+                    // Then we check if it was successfully completed
+                    if (response.status === "OK") {
+                      let { id, email } = response.user;
+                      // TODO: post email verification logic
+                    }
+                    return response;
+                  },
+                }
+              }
+            },
+            apis: (originalImplementation) => {
+              return {
                 ...originalImplementation,
                 signUpPOST: async function (input) {
-                  if (originalImplementation.signUpPOST === undefined) {                                
-                    throw Error("Should never come here");                            
+                  if (originalImplementation.signUpPOST === undefined) {
+                    throw Error("Should never come here");
                   }
-                  // First we call the original implementation of signUpPOST.                            
+                  // First we call the original implementation of signUpPOST.
                   let response = await originalImplementation.signUpPOST(input);
 
-                  // Post sign up response, we check if it was successful                            
-                  if (response.status === "OK") {                                
-                    // // These are the input form fields values that the user used while signing up                                
-                    let formFields = input.formFields;                                
+                  // Post sign up response, we check if it was successful
+                  if (response.status === "OK") {
+                    // // These are the input form fields values that the user used while signing up
+                    let formFields = input.formFields;
                     // TODO: post sign up logic
                     try{
                       Users.update(
                         {
-                          nama_pengguna : formFields.filter((f) => f.id === "nama_pengguna")[0].value, 
+                          nama_pengguna : formFields.filter((f) => f.id === "nama_pengguna")[0].value,
                           nama : formFields.filter((f) => f.id === "nama")[0].value,
                           status: "ACTIVE"
                         },
@@ -166,54 +166,54 @@ supertokens.init({
                     }catch (e){
                       return express.response.status(500).send(e);
                     }
-                  }                               
-                  return response;                        
+                  }
+                  return response;
                 },
                 signInPOST: async function (input) {
-                  if (originalImplementation.signInPOST === undefined) {                                
-                    throw Error("Should never come here");                            
+                  if (originalImplementation.signInPOST === undefined) {
+                    throw Error("Should never come here");
                   }
-                  // First we call the original implementation of signInPOST.                            
+                  // First we call the original implementation of signInPOST.
                   let response = await originalImplementation.signInPOST(input);
 
-                  // Post sign up response, we check if it was successful                            
-                  if (response.status === "OK") {                                
+                  // Post sign up response, we check if it was successful
+                  if (response.status === "OK") {
                     let { id, email } = response.user;
-                    // These are the input form fields values that the user used while signing in                                
-                    let formFields = input.formFields                                
-                    // TODO: post sign in logic                            
-                  }                            
-                  return response;                        
+                    // These are the input form fields values that the user used while signing in
+                    let formFields = input.formFields
+                    // TODO: post sign in logic
+                  }
+                  return response;
                 },
-                createNewSession: async function (input) {                            
+                createNewSession: async function (input) {
                   let userId = input.userId;
                   let role = "admin"; // TODO: fetch role based on userId
-                  input.accessTokenPayload = {                                
-                    ...input.accessTokenPayload,                                
-                    role                            
+                  input.accessTokenPayload = {
+                    ...input.accessTokenPayload,
+                    role
                   };
-                  return originalImplementation.createNewSession(input);                        
-                },                 
-              }                
-            }            
-          }        
+                  return originalImplementation.createNewSession(input);
+                },
+              }
+            }
+          }
         }), // initializes signin / sign up features
         Session.init({
-          override: {                
-            functions: (originalImplementation) => {                    
-              return {                        
-                ...originalImplementation,                        
-                createNewSession: async function (input) {                            
+          override: {
+            functions: (originalImplementation) => {
+              return {
+                ...originalImplementation,
+                createNewSession: async function (input) {
                   let userId = input.userId;
                   let role = "admin"; // TODO: fetch role based on userId
-                  input.accessTokenPayload = {                                
-                    ...input.accessTokenPayload,                                
-                    role     
+                  input.accessTokenPayload = {
+                    ...input.accessTokenPayload,
+                    role
                   };
-                  return originalImplementation.createNewSession(input);                        
-                },                    
-              };                
-            },            
+                  return originalImplementation.createNewSession(input);
+                },
+              };
+            },
           },
         }) // initializes session features
     ]
@@ -229,7 +229,11 @@ app.use(
  })
 );
 
-app.use(logger('dev'));
+if(process.env.NODE_ENV !== 'test') {
+  //use morgan to log at command line
+  app.use(logger('dev'));
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
