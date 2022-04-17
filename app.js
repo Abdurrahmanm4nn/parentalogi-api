@@ -34,7 +34,7 @@ supertokens.init({
     framework: "express",
     supertokens: {
         // try.supertokens.com is for demo purposes. Replace this with the address of your core instance (sign up on supertokens.com), or self host a core.
-        connectionURI: process.env.ST_URI,
+        connectionURI: process.env.NODE_ENV === 'test' ? process.env.ST_TEST_URI : process.env.ST_URI,
         // apiKey: "IF YOU HAVE AN API KEY FOR THE CORE, ADD IT HERE",
     },
     appInfo: {
