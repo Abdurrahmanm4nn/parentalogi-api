@@ -69,15 +69,15 @@ router.put("/edit-profile", async (req, res) => {
   return res.status(200).json({message : 'Successfully Updating Profile!'});
 
 });
-router.put("/change-password", verifySession(), async (req, res) => {
+router.put("/change-password", async (req, res) => {
   // get the supertokens session object from the req
-  let session = req.session;
+  let cookies = req.cookies;
   // retrive the old password from the request body
   let oldPassword = req.body.oldPassword;
   // retrive the new password from the request body
   let updatedPassword = req.body.newPassword;
   // get the user's Id from the session
-  let userId = session.getUserId();
+  let userId = cookies.user_id;
   // get the signed in user's email from the getUserById function
   let userInfo = await EmailPassword.getUserById(userId);
   if (userInfo === undefined) {
@@ -98,14 +98,14 @@ router.put("/change-password", verifySession(), async (req, res) => {
   });
 
   // revoke all sessions for the user
-  await Session.revokeAllSessionsForUser(userId)
+  await Session.revokeAllSessionsForUser(userId);
   // revoke the current user's session, we do this to remove the auth cookies, logging out the user on the frontend.
   await req.session.revokeSession()
   if (!response){
     return res.status(500);
   }
 
-  return res.status(200).json({"message" : "Successfully Changing password!"})
+  return res.status(200).json({"message" : "Successfully Changing password!"});
 });
 
 // Add this AFTER all your routes
