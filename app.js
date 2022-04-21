@@ -14,11 +14,13 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const Users = require('./models/users');
 const { getUserById } = require('supertokens-node/recipe/emailpassword');
+const { response } = require('express');
 
 var app = express();
 app.use(middleware());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+let res = response;
 
 const transporter = nodemailer.createTransport({
   port: 465,               // true for 465, false for other ports
@@ -175,24 +177,19 @@ supertokens.init({
                   }
                   // First we call the original implementation of signInPOST.
                   let response = await originalImplementation.signInPOST(input);
-
+                  let userId;
+                  let headers;
                   // Post sign up response, we check if it was successful
                   if (response.status === "OK") {
                     let { id, email } = response.user;
                     // These are the input form fields values that the user used while signing in
                     let formFields = input.formFields
                     // TODO: post sign in logic
+                    userId = id;
+                    headers = {'user_id': userId};
                   }
+                  app.response.setHeader({'user_id': userId});
                   return response;
-                },
-                createNewSession: async function (input) {
-                  let userId = input.userId;
-                  let role = "admin"; // TODO: fetch role based on userId
-                  input.accessTokenPayload = {
-                    ...input.accessTokenPayload,
-                    role
-                  };
-                  return originalImplementation.createNewSession(input);
                 },
               }
             }
