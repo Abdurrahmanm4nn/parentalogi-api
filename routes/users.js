@@ -1,4 +1,4 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 var EmailPassword = require('supertokens-node/recipe/emailpassword');
 let supertoken = require('supertokens-node/framework/express');
@@ -10,9 +10,10 @@ let app = express();
 let req = supertoken.SessionRequest;
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get("/", function (req, res, next) {
+  res.send("respond with a resource");
 });
+
 router.get("/profile", verifySession(), async (req, res) => {
   // get the supertokens session object from the req
   let session = req.session;
@@ -22,13 +23,13 @@ router.get("/profile", verifySession(), async (req, res) => {
   let profile;
 
   try {
-    let userData = await Users.scope('profile').findAll({
-      where : {
-        user_id : userId
-      }
+    let userData = await Users.scope("profile").findAll({
+      where: {
+        user_id: userId,
+      },
     });
     profile = userData;
-  }catch (e){
+  } catch (e) {
     return res.status(500).send(e);
   }
   return res.status(200).json(profile[0]);
@@ -41,10 +42,10 @@ router.put("/edit-profile", async (req, res) => {
   if (cookies === undefined){
     return res.status(401).send("Please login first!");
   }
-  
+
   // get the user's Id from the session
   let userId = cookies.user_id;
-  
+
   let data;
 
   let field = req.body;
@@ -63,8 +64,6 @@ router.put("/edit-profile", async (req, res) => {
         user_id : userId
       }
     });
-  }catch (e){
-    return res.status(500).send(e);
   }
   return res.status(200).json({message : 'Successfully Updating Profile!'});
 
@@ -81,11 +80,11 @@ router.put("/change-password", async (req, res) => {
   // get the signed in user's email from the getUserById function
   let userInfo = await EmailPassword.getUserById(userId);
   if (userInfo === undefined) {
-    throw new Error("Should never come here")
+    throw new Error("Should never come here");
   }
 
   // call signin to check that input password is correct
-  let isPasswordValid = await EmailPassword.signIn(userInfo.email, oldPassword)
+  let isPasswordValid = await EmailPassword.signIn(userInfo.email, oldPassword);
   if (isPasswordValid.status !== "OK") {
     // TODO: handle incorrect password error
     return;
@@ -94,14 +93,14 @@ router.put("/change-password", async (req, res) => {
   // update the user's password using updateEmailOrPassword
   let response = await EmailPassword.updateEmailOrPassword({
     userId,
-    password: updatedPassword
+    password: updatedPassword,
   });
 
   // revoke all sessions for the user
   await Session.revokeAllSessionsForUser(userId);
   // revoke the current user's session, we do this to remove the auth cookies, logging out the user on the frontend.
-  await req.session.revokeSession()
-  if (!response){
+  await req.session.revokeSession();
+  if (!response) {
     return res.status(500);
   }
 
