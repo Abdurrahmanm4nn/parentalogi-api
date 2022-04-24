@@ -12,7 +12,7 @@ const sequelize = new Sequelize(
   }
 );
 
-const Posts = sequelize.define('users', {
+const Posts = sequelize.define('posts', {
   id: {
       type: Sequelize.INTEGER(11),
       primaryKey: true,
@@ -20,7 +20,7 @@ const Posts = sequelize.define('users', {
       allowNull: false
     },
   id_penulis: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.STRING(36),
     allowNull: false
   },
   slug: {
@@ -53,5 +53,15 @@ const Posts = sequelize.define('users', {
   },
   updatedAt: { type: Sequelize.DATE, allowNull: false }
 });
+
+Posts.addScope('toView', 
+  { 
+   attributes: { 
+     exclude: [
+      'telah_dihapus', 
+      'telah_diubah'
+    ] } 
+  }
+);
 
 module.exports = Posts;
