@@ -171,26 +171,6 @@ supertokens.init({
                   }
                   return response;
                 },
-                signInPOST: async function (input) {
-                  if (originalImplementation.signInPOST === undefined) {
-                    throw Error("Should never come here");
-                  }
-                  // First we call the original implementation of signInPOST.
-                  let response = await originalImplementation.signInPOST(input);
-                  let userId;
-                  let headers;
-                  // Post sign up response, we check if it was successful
-                  if (response.status === "OK") {
-                    let { id, email } = response.user;
-                    // These are the input form fields values that the user used while signing in
-                    let formFields = input.formFields
-                    // TODO: post sign in logic
-                    userId = id;
-                    headers = {'user_id': userId};
-                  }
-                  app.response.setHeader({'user_id': userId});
-                  return response;
-                },
               }
             }
           }
