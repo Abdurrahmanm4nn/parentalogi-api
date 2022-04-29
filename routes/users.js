@@ -64,6 +64,8 @@ router.put("/edit-profile", async (req, res) => {
         user_id : userId
       }
     });
+  } catch (e){
+    return res.status(500).send(e);
   }
   return res.status(200).json({message : 'Successfully Updating Profile!'});
 

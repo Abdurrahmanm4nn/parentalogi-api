@@ -9,7 +9,7 @@ const Posts = sequelize.define("posts", {
     allowNull: false,
   },
   id_penulis: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.CHAR(36),
     references: {
       model: Users,
       key: "user_id",

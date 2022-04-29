@@ -2,7 +2,7 @@ const { Sequelize, sequelize } = require("./baseModel");
 
 const Users = sequelize.define("users", {
   user_id: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.CHAR(36),
     primaryKey: true,
     autoIncrement: true,
     allowNull: false,
