@@ -13,6 +13,7 @@ let cors = require("cors");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var commentsRouter = require('./routes/comments');
+var postsRouter = require('./routes/posts');
 const Users = require('./models/users');
 const { getUserById } = require('supertokens-node/recipe/emailpassword');
 const { response } = require('express');
@@ -208,5 +209,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/comments', commentsRouter);
+app.use('/posts', postsRouter);
 
 module.exports = app;
