@@ -12,17 +12,17 @@ const sequelize = new Sequelize(
   }
 );
 
-const UserFollowsTag = sequelize.define('user_follows_tag', {
+const UserLikesToPost = sequelize.define('user_likes_to_post', {
     id_user: {
-      type: DataTypes.INTEGER(11),
+      type: Sequelize.INTEGER(11),
       primaryKey: true,
       allowNull: false
     }, 
-    id_tag: {
-      type: DataTypes.INTEGER(11),
+    id_post: {
+      type: Sequelize.INTEGER(11),
       primaryKey: true,
       allowNull: false
     }
 });
 
-module.exports = UserFollowsTag;
+module.exports = UserLikesToPost;

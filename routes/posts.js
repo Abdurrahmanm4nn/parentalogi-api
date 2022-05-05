@@ -4,6 +4,8 @@ var EmailPassword = require("supertokens-node/recipe/emailpassword");
 let supertoken = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
 const Posts = require('./../models/posts');
+const UserLikesToPost = require('./../models/userLikesToPost');
+const PostToTag = require('./../models/postToTag');
 let app = express();
 let req = supertoken.SessionRequest;
 const getPagination = (page, size) => {
@@ -63,12 +65,25 @@ router.post("/", verifySession(), async (req, res) => {
   try{
     await Posts.create({
       id_penulis: userId,
-      tags_id: tags_id,
       slug: slug,
       judul: postTitle,
       isi_text: postContent,
       updatedAt: sequelize.NOW
     });
+    const postId = await Posts.findOne({
+      attributes: {
+        include: ['id']
+      },  
+      where: {
+        slug: slug
+      }
+    });
+    for (let i in tags_id){
+      await PostToTag.create({
+        id_post: postId,
+        id_tag: tags_id[i]
+      });
+    }
   }catch(e){
     return res.status(500).send(e);
   }
@@ -101,11 +116,20 @@ router.put("/:slug", verifySession(), async (req, res) => {
   let tags_id = req.body.tags_id;
   let postContent = req.body.isi_text;
   let slug = req.params.slug;
+  let newSlug = postTitle.replace(/\s/g, '-');
+
+  const postId = await Posts.findOne({
+    attributes: {
+      include: ['id']
+    },  
+    where: {
+      slug: slug
+    }
+  });
 
   try{
     await Posts.update({
-      tags_id: tags_id,
-      slug: slug,
+      slug: newSlug,
       judul: postTitle,
       isi_text: postContent,
       updatedAt: sequelize.NOW
@@ -116,6 +140,16 @@ router.put("/:slug", verifySession(), async (req, res) => {
         slug: slug
       }
     });
+    for (let i in tags_id){
+      await PostToTag.update({
+        id_tag: tags_id[i]
+      },
+      {
+        where: {
+          id_post: postId
+        }
+      });
+    }
   }catch(e){
     return res.status(500).send(e);
   }
@@ -138,7 +172,67 @@ router.delete("/:slug", verifySession(), async (req, res) => {
   }
   
   return res.status(200).send("Successfully Deleting a Post!");
-})
+});
+router.post("/:slug/like", verifySession(), async (req, res) => {
+  const userId = req.session.getUserId();
+  let slug = req.params.slug;
+  
+  const postId = await Posts.findOne({
+    attributes: {
+      include: ['id']
+    },  
+    where: {
+      slug: slug
+    }
+  });
+
+  const userHasAlreadyLiked = await UserLikesToPost.findOne({
+    where: {
+      id_user: userId,
+      id_post: postId
+    }
+  });
+
+  if (!userHasAlreadyLiked){
+    try {
+      await Posts.increment({
+        jumlah_disukai: 1
+      },
+      {
+        where: {
+          slug: slug,
+          id_post: postId
+        }
+      })
+      await UserLikesToPost.create({
+        id_user: userId,
+        id_post: postId
+      });
+    } catch (error) {
+      return res.status(500).send(error);
+    }
+    return res.status(200).send("You liked a post!");
+  }else{
+    try {
+      await Posts.decrement({
+        jumlah_disukai: 1
+      },
+      {
+        where: {
+          slug: slug,
+          id_post: postId
+        }
+      });
+      await UserLikesToPost.destroy({
+        id_user: userId,
+        id_post: postId
+      });
+    } catch (error) {
+      return res.status(500).send(error);
+    }
+    return res.status(200).send("You liked a post!");
+  } 
+});
 
 app.use(supertoken.errorHandler());
 
