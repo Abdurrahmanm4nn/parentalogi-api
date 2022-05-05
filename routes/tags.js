@@ -48,7 +48,7 @@ router.put("/:tagId", verifySession(), async (req, res) => {
             warna: warnaTag
         },
         {
-            id: tagId
+            where: {id: tagId}
         });
     } catch (error) {
         return res.status(500).send("An error occured while Updating Tags.");

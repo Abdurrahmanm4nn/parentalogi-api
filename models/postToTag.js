@@ -13,16 +13,16 @@ const sequelize = new Sequelize(
 );
 
 const PostToTag = sequelize.define('post_to_tag', {
-    id_post: {
-        type: DataTypes.INTEGER(11),
-        primaryKey: true,
-        allowNull: false
-      }, 
-      id_tag: {
-        type: DataTypes.INTEGER(11),
-        primaryKey: true,
-        allowNull: false
-      }
+  id_post: {
+    type: DataTypes.INTEGER(11),
+    primaryKey: true,
+    allowNull: false
+  }, 
+  id_tag: {
+    type: DataTypes.INTEGER(11),
+    primaryKey: true,
+    allowNull: false
+  }
 });
 
 module.exports = PostToTag;
