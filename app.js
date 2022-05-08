@@ -199,7 +199,7 @@ supertokens.init({
 
 app.use(
  cors({
-   origin: "*",
+   origin: "http://localhost:3000",
    allowedHeaders: [
     "content-type",
     supertokens.getAllCORSHeaders()],

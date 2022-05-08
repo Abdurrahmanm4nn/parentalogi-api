@@ -23,7 +23,7 @@ describe("Users", () => {
   });
 
   describe("/POST sign up", () => {
-    it("it should POST simple sign up request", (done) => {
+    it("should POST simple sign up request", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "cartaphilus" },
@@ -47,7 +47,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when there's a same email present", (done) => {
+    it("should not POST when there's a same email present", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "chisehatori" },
@@ -71,7 +71,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when nama_pengguna is not provided", (done) => {
+    it("should not POST when nama_pengguna is not provided", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "" },
@@ -98,7 +98,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when nama is not provided", (done) => {
+    it("should not POST when nama is not provided", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "sherieshatterie" },
@@ -123,7 +123,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when email is not provided", (done) => {
+    it("should not POST when email is not provided", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "sherieshatterie" },
@@ -148,7 +148,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when password is not provided", (done) => {
+    it("should not POST when password is not provided", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "sherieshatterie" },
@@ -173,7 +173,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when email is not valid", (done) => {
+    it("should not POST when email is not valid", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "eliasainsworth" },
@@ -198,7 +198,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when password is less than 8 chars", (done) => {
+    it("should not POST when password is less than 8 chars", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "eliasainsworth" },
@@ -225,7 +225,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when password is not providing any number", (done) => {
+    it("should not POST when password is not providing any number", (done) => {
       let body = {
         formFields: [
           { id: "nama_pengguna", value: "eliasainsworth" },
@@ -252,7 +252,7 @@ describe("Users", () => {
   });
 
   describe("/POST sign in", () => {
-    it("it should not POST wrong credentials", (done) => {
+    it("should not POST wrong credentials", (done) => {
       let body = {
         formFields: [
           { id: "email", value: "eliasainsworth@notrealgmail.com" },
@@ -275,7 +275,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when email is not provided", (done) => {
+    it("should not POST when email is not provided", (done) => {
       let body = {
         formFields: [
           { id: "email", value: "" },
@@ -298,7 +298,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should not POST when password is not provided", (done) => {
+    it("should not POST when password is not provided", (done) => {
       let body = {
         formFields: [
           { id: "email", value: "eliasainsworth@notrealgmail.com" },
@@ -321,7 +321,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should POST simple sign in request", (done) => {
+    it("should POST simple sign in request", (done) => {
       let body = {
         formFields: [
           { id: "email", value: "josephcartaphilus@notrealgmail.com" },
@@ -348,7 +348,7 @@ describe("Users", () => {
   });
 
   describe("/POST forget password request", () => {
-    it("it should POST when valid and existing email provided", (done) => {
+    it("should POST when valid and existing email provided", (done) => {
       let body = {
         formFields: [
           { id: "email", value: "josephcartaphilus@notrealgmail.com" },
@@ -365,7 +365,7 @@ describe("Users", () => {
         });
     });
 
-    // it("it should not POST when non valid nor existing email provided", (done) => {
+    // it("should not POST when non valid nor existing email provided", (done) => {
     //   let body = {
     //     formFields: [{ id: "email", value: "chisehatori@notrealgmail.com" }],
     //   };
@@ -383,7 +383,7 @@ describe("Users", () => {
   });
 
   describe("/GET my profile", () => {
-    it("it should not GET when there is non valid cookie", (done) => {
+    it("should not GET when there is non valid cookie", (done) => {
       chai
         .request(server)
         .get("/users/profile")
@@ -395,7 +395,7 @@ describe("Users", () => {
         });
     });
 
-    it("it should GET when there is a valid cookie credentials", (done) => {
+    it("should GET when there is a valid cookie credentials", (done) => {
       agent.get("/users/profile").end((err, res) => {
         res.should.have.status(200);
         res.body.should.be.a("object");
@@ -411,7 +411,7 @@ describe("Users", () => {
   });
 
   // describe("/PUT edit profile", () => {
-  //   it("it should PUT when there is a valid cookie", (done) => {
+  //   it("should PUT when there is a valid cookie", (done) => {
   //     chai
   //       .request(server)
   //       .put("/users/edit-profile")
@@ -427,7 +427,7 @@ describe("Users", () => {
   // });
 
   describe("/POST sign out", () => {
-    it("it should POST when there is a valid cookie credentials", (done) => {
+    it("should POST when there is a valid cookie credentials", (done) => {
       agent.post("/signout").end((err, res) => {
         res.should.have.status(200);
         res.body.should.be.a("object");

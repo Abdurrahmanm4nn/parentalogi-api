@@ -6,6 +6,7 @@ let {
   verifySession,
 } = require("supertokens-node/recipe/session/framework/express");
 const { sequelize } = require("./../models/baseModel");
+const Posts = require("./../models/posts");
 const Comments = require("./../models/comments");
 const UserLikesToComment = require("./../models/UserLikesToComment");
 let app = express();
@@ -16,11 +17,41 @@ router.get("/", function (req, res, next) {
   res.send("respond with a stinky strange resource");
 });
 
+router.get("/:comment_id", verifySession(), async (req, res) => {
+  const commentId = req.params.comment_id;
+  let data;
+
+  try {
+    data = await Comments.findOne({
+      where: {
+        id: commentId,
+      },
+    });
+  } catch (e) {
+    return res.status(500).send(e);
+  }
+  return res.status(200).json(data);
+});
+
 router.post("/", verifySession(), async (req, res) => {
   const userId = req.session.getUserId();
   const field = req.body;
 
   try {
+    // check post validity
+    const findPost = await Posts.findOne({ where: { id: field.id_post } });
+    if (findPost === null)
+      return res.status(400).json({ message: "Post is not found!" });
+
+    // if this comment is considered child comment, check parent comment validity
+    const findParent = await Comments.findOne({ where: { id: field.orang_tua } });
+    if (field.orang_tua !== 0 && findParent === null)
+      return res.status(400).json({ message: "Parent comment is not found!" });
+
+    // check whether comment text/ content is provided
+    if (field.isi_text == "")
+      return res.status(400).json({ message: "Comment content must be supplied!" });
+
     data = await Comments.create({
       id_penulis: userId,
       id_post: field.id_post,
@@ -30,15 +61,30 @@ router.post("/", verifySession(), async (req, res) => {
   } catch (e) {
     return res.status(500).send(e);
   }
-  return res.status(200).json({ message: "Successfully Adding Comment!" });
+  return res.status(200).json({ message: "Successfully adding comment!", data });
 });
 
 router.put("/:comment_id", verifySession(), async (req, res) => {
+  const userId = req.session.getUserId();
   const commentId = req.params.comment_id;
   const field = req.body;
+  let data;
 
   try {
-    data = await Comments.update(
+    data = await Comments.findOne({
+      where: {
+        id_penulis: userId,
+        id: commentId
+      },
+    });
+
+    if (data === null)
+      return res.status(400).json({ message: "Comment is not found!" });
+
+    if (field.isi_text == "")
+      return res.status(400).json({ message: "Comment content must be supplied!" });
+
+    await Comments.update(
       {
         isi_text: field.isi_text,
         telah_diubah: 1,
@@ -52,22 +98,25 @@ router.put("/:comment_id", verifySession(), async (req, res) => {
   } catch (e) {
     return res.status(500).send(e);
   }
-  return res.status(200).json({ message: "Successfully Updating Comment!" });
+  return res.status(200).json({ message: "Successfully updating comment!" });
 });
 
 router.put("/:comment_id/upvote", verifySession(), async (req, res) => {
   const commentId = req.params.comment_id;
   const userId = req.session.getUserId();
 
+  findPost = await Comments.findOne({ where: { id: commentId }, });
+
+  if (findPost === null)
+    return res.status(400).json({ message: "Comment is not found!" });
+
   const userHasAlreadyLiked = await UserLikesToComment.findOne({
     where: { id_comment: commentId, id_user: userId },
   });
 
-  console.log(userHasAlreadyLiked);
-
-  // check whether the user has already liked the comment
-  if (userHasAlreadyLiked === null) {
-    try {
+  try {
+    // check whether the user has already liked the comment
+    if (userHasAlreadyLiked === null) {
       // start transaction
       const result = await sequelize.transaction(async (t) => {
         // this updates comment table to increment `jumlah_disukai` attribute
@@ -91,17 +140,12 @@ router.put("/:comment_id/upvote", verifySession(), async (req, res) => {
           { transaction: t }
         );
 
-        return {
-          ...incrementVal,
-          ...addPostUpvote,
-        };
+        return incrementVal + addPostUpvote;
       });
-    } catch (e) {
-      return res.status(500).send(e);
-    }
-    return res.status(200).json({ message: "Successfully Liking Comment!" });
-  } else {
-    try {
+
+      if (!result) return res.status(400).json({ message: "Liking comment failed!" });
+
+    } else {
       // start transaction
       const result = await sequelize.transaction(async (t) => {
         // this updates comment table to increment `jumlah_disukai` attribute
@@ -117,24 +161,62 @@ router.put("/:comment_id/upvote", verifySession(), async (req, res) => {
           { transaction: t }
         );
 
-        const removePostUpvote = await UserLikesToComment.destroy(
-          {
-            id_comment: commentId,
-            id_user: userId,
+        const removePostUpvote = await UserLikesToComment.destroy({
+            where: {
+              id_comment: commentId,
+              id_user: userId,
+            }
           },
           { transaction: t }
         );
 
-        return {
-          ...decrementVal,
-          ...removePostUpvote,
-        };
+        return decrementVal + removePostUpvote;
       });
-    } catch (e) {
-      return res.status(500).send(e);
+      if (!result) return res.status(400).json({ message: "disliking comment failed!" });
     }
-    return res.status(200).json({ message: "Successfully Unliking Comment!" });
+  } catch (e) {
+    return res.status(500).send(e);
   }
+  return (userHasAlreadyLiked === null) ?
+    res.status(200).json({ message: "Successfully liking comment!" }) :
+    res.status(200).json({ message: "Successfully disliking comment!" });
+});
+
+router.delete("/:comment_id", verifySession(), async (req, res) => {
+  const userId = req.session.getUserId();
+  const commentId = req.params.comment_id;
+  let data;
+
+  try {
+    const result = await sequelize.transaction(async (t) => {
+      const destroyComment = await Comments.destroy(
+        {
+          where: {
+            id_penulis: userId,
+            id: commentId
+          },
+        },
+        { transaction: t }
+      );
+
+      // ignore deleting child comment if parent comment doesn't exist
+      if (destroyComment !== 0) {
+        await Comments.destroy(
+          {
+            where: { orang_tua: commentId },
+          },
+          { transaction: t }
+        );
+      }
+
+      return destroyComment;
+    });
+    if (!result) return res.status(400).json({ message: "Comment is not found!" });
+  } catch (e) {
+    return res.status(500).send(e);
+  }
+
+  return res.status(200).json({ message: "Successfully deleting comment!" });
 });
 
 // Add this AFTER all your routes
