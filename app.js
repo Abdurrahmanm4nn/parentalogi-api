@@ -13,9 +13,12 @@ let cors = require("cors");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var commentsRouter = require('./routes/comments');
+var postsRouter = require('./routes/posts');
+var tagsRouter = require('./routes/tags');
 const Users = require('./models/users');
 const { getUserById } = require('supertokens-node/recipe/emailpassword');
 const { response } = require('express');
+const { createNewSession } = require('supertokens-node/recipe/session');
 
 var app = express();
 app.use(middleware());
@@ -121,20 +124,7 @@ supertokens.init({
                       }
                       return app.response.status(200).send({message: "Verification email sent!", message_id: info.messageId});
                     });
-                  },
-                  verifyEmailPOST: async function (input) {
-                    if (originalImplementationEmailVerification.verifyEmailPOST === undefined) {
-                      throw Error("Should never come here");
-                    }
-                    // First we call the original implementation
-                    let response = await originalImplementationEmailVerification.verifyEmailPOST(input);
-                    // Then we check if it was successfully completed
-                    if (response.status === "OK") {
-                      let { id, email } = response.user;
-                      // TODO: post email verification logic
-                    }
-                    return response;
-                  },
+                  }
                 }
               }
             },
@@ -171,7 +161,7 @@ supertokens.init({
                     }
                   }
                   return response;
-                },
+                }
               }
             }
           }
@@ -183,10 +173,10 @@ supertokens.init({
                 ...originalImplementation,
                 createNewSession: async function (input) {
                   let userId = input.userId;
-                  let role = "admin"; // TODO: fetch role based on userId
+                  let user = getUserById(userId);
                   input.accessTokenPayload = {
                     ...input.accessTokenPayload,
-                    role
+                    user
                   };
                   return originalImplementation.createNewSession(input);
                 },
@@ -220,5 +210,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/comments', commentsRouter);
+app.use('/posts', postsRouter);
+app.use('/tags', tagsRouter);
 
 module.exports = app;

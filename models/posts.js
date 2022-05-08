@@ -47,4 +47,14 @@ const Posts = sequelize.define("posts", {
   updatedAt: { type: Sequelize.DATE, allowNull: false },
 });
 
+Posts.addScope('toView',
+  {
+   attributes: {
+     exclude: [
+      'telah_dihapus',
+      'telah_diubah'
+    ] }
+  }
+);
+
 module.exports = Posts;
