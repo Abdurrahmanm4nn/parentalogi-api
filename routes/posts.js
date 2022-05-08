@@ -73,7 +73,7 @@ router.post("/", verifySession(), async (req, res) => {
     const postId = await Posts.findOne({
       attributes: {
         include: ['id']
-      },  
+      },
       where: {
         slug: slug
       }
@@ -87,12 +87,12 @@ router.post("/", verifySession(), async (req, res) => {
   }catch(e){
     return res.status(500).send(e);
   }
-  
+
   return res.status(200).send("Successfully Creating a Post!");
 });
 router.get('/:slug', async function(req, res, next) {
   let data;
-  
+
   let slug = req.params.slug;
 
   try {
@@ -121,7 +121,7 @@ router.put("/:slug", verifySession(), async (req, res) => {
   const postId = await Posts.findOne({
     attributes: {
       include: ['id']
-    },  
+    },
     where: {
       slug: slug
     }
@@ -153,7 +153,7 @@ router.put("/:slug", verifySession(), async (req, res) => {
   }catch(e){
     return res.status(500).send(e);
   }
-  
+
   return res.status(200).send("Successfully Editing a Post!");
 });
 router.delete("/:slug", verifySession(), async (req, res) => {
@@ -170,17 +170,17 @@ router.delete("/:slug", verifySession(), async (req, res) => {
   }catch(e){
     return res.status(500).send(e);
   }
-  
+
   return res.status(200).send("Successfully Deleting a Post!");
 });
 router.post("/:slug/like", verifySession(), async (req, res) => {
   const userId = req.session.getUserId();
   let slug = req.params.slug;
-  
+
   const postId = await Posts.findOne({
     attributes: {
       include: ['id']
-    },  
+    },
     where: {
       slug: slug
     }
@@ -231,7 +231,7 @@ router.post("/:slug/like", verifySession(), async (req, res) => {
       return res.status(500).send(error);
     }
     return res.status(200).send("You liked a post!");
-  } 
+  }
 });
 
 app.use(supertoken.errorHandler());

@@ -1,28 +1,40 @@
-require('dotenv').config();
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config')[env];
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize(
-  config.database, 
-  config.username, 
-  config.password,
+const { Sequelize, sequelize } = require("./baseModel");
+const Users = require("./users");
+const Tags = require("./tags");
+
+const UserFollowsTag = sequelize.define(
+  "user_follows_tag",
   {
-    host: config.host,
-    dialect: config.dialect
+    id_user: {
+      type: Sequelize.CHAR(36),
+      primaryKey: true,
+      autoIncrement: false,
+      allowNull: false,
+      references: {
+        model: Users,
+        key: "user_id",
+      },
+    },
+    id_tag: {
+      type: Sequelize.INTEGER(11),
+      primaryKey: true,
+      autoIncrement: false,
+      allowNull: false,
+      references: {
+        model: Tags,
+        key: "id",
+      },
+    }
+  },
+  {
+    timestamps: false,
+    incrementMe: { type: Sequelize.INTEGER, autoIncrement: false },
+    freezeTableName: true,
   }
 );
 
-const UserFollowsTag = sequelize.define('user_follows_tag', {
-    id_user: {
-      type: DataTypes.INTEGER(11),
-      primaryKey: true,
-      allowNull: false
-    }, 
-    id_tag: {
-      type: DataTypes.INTEGER(11),
-      primaryKey: true,
-      allowNull: false
-    }
-});
+Tags.belongsToMany(Users, { through: UserFollowsTag, unique: false, foreignKey: 'id_tag' });
+Users.belongsToMany(Tags, { through: UserFollowsTag, uniqueKey: false, foreignKey: 'id_user' });
+
 
 module.exports = UserFollowsTag;
