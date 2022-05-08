@@ -5,6 +5,7 @@ let supertoken = require('supertokens-node/framework/express');
 let { verifySession } = require('supertokens-node/recipe/session/framework/express');
 let Session = require('supertokens-node/recipe/session');
 const Users = require('./../models/users');
+const FollowsUser = require('./../models/userFollowsUser');
 const cookieParser = require('cookie-parser');
 let app = express();
 let req = supertoken.SessionRequest;
@@ -107,6 +108,37 @@ router.put("/change-password", async (req, res) => {
   }
 
   return res.status(200).json({"message" : "Successfully Changing password!"});
+});
+router.post('/:user_id/follow', verifySession(), async (req, res) => {
+  // get the supertokens session object from the req
+  let session = req.session;
+  // get the user's Id from the session
+  let userId = session.getUserId();
+  let toFollow = req.params.user_id;
+
+  const userHasAlreadyFollowed = await FollowsUser.findOne({
+    where: { id_pengikut: userId, id_diikuti: toFollow },
+  });
+
+  try {
+    if (!userHasAlreadyFollowed){
+      await FollowsUser.create({
+        id_pengikut: userId,
+        id_diikuti: toFollow
+      });
+    }else{
+      await FollowsUser.destroy({
+        where: {
+          id_pengikut: userId,
+          id_diikuti: toFollow
+        }
+      });
+    }
+  } catch (error) {
+    return res.status(500).send("Error occured when trying to follow/unfollow a user!");
+  }
+
+  return res.status(200).send("You followed/unfollowed a user!");
 });
 
 // Add this AFTER all your routes
