@@ -1,6 +1,5 @@
 process.env.NODE_ENV = "test";
 
-const Users = require("../models/users");
 const Comments = require("../models/comments");
 
 let chai = require("chai");

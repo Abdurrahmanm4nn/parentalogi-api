@@ -8,7 +8,7 @@ let {
 const { sequelize } = require("./../models/baseModel");
 const Posts = require("./../models/posts");
 const Comments = require("./../models/comments");
-const UserLikesToComment = require("./../models/UserLikesToComment");
+const UserLikesToComment = require("./../models/userLikesToComment");
 let app = express();
 let req = supertoken.SessionRequest;
 
