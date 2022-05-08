@@ -1,11 +1,20 @@
 const { Sequelize, sequelize } = require("./baseModel");
+const Posts = require("./posts");
 const Users = require("./users");
 
-const Posts = sequelize.define("posts", {
+const Comments = sequelize.define("comments", {
   id: {
     type: Sequelize.INTEGER(11),
     primaryKey: true,
     autoIncrement: true,
+    allowNull: false,
+  },
+  id_post: {
+    type: Sequelize.INTEGER(11),
+    references: {
+      model: Posts,
+      key: "id",
+    },
     allowNull: false,
   },
   id_penulis: {
@@ -16,35 +25,17 @@ const Posts = sequelize.define("posts", {
     },
     allowNull: false,
   },
-  slug: {
-    type: Sequelize.STRING(100),
-    allowNull: false,
-  },
-  judul: {
-    type: Sequelize.STRING(100),
-    allowNull: false,
-  },
-  isi_text: {
-    type: Sequelize.TEXT("long"),
-    allowNull: false,
-  },
+  orang_tua: { type: Sequelize.INTEGER(11), allowNull: false, defaultValue: 0 },
+  isi_text: { type: Sequelize.TEXT("long"), allowNull: false },
   jumlah_disukai: {
     type: Sequelize.INTEGER(8),
     allowNull: false,
     defaultValue: 0,
   },
   createdAt: { type: Sequelize.DATE, allowNull: false },
-  telah_dihapus: {
-    type: Sequelize.BOOLEAN,
-    allowNull: false,
-    defaultValue: 0,
-  },
-  telah_diubah: {
-    type: Sequelize.BOOLEAN,
-    allowNull: false,
-    defaultValue: 0,
-  },
+  telah_dihapus: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: 0 },
+  telah_diubah: { type: Sequelize.BOOLEAN, allowNull: false, defaultValue: 0 },
   updatedAt: { type: Sequelize.DATE, allowNull: false },
 });
 
-module.exports = Posts;
+module.exports = Comments;

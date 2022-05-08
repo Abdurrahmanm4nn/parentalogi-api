@@ -12,6 +12,7 @@ let { middleware } = require("supertokens-node/framework/express");
 let cors = require("cors");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var commentsRouter = require('./routes/comments');
 const Users = require('./models/users');
 const { getUserById } = require('supertokens-node/recipe/emailpassword');
 const { response } = require('express');
@@ -198,7 +199,7 @@ supertokens.init({
 
 app.use(
  cors({
-   origin: "*",
+   origin: "http://localhost:3000",
    allowedHeaders: [
     "content-type",
     supertokens.getAllCORSHeaders()],
@@ -218,5 +219,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/comments', commentsRouter);
 
 module.exports = app;
