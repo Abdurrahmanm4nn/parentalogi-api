@@ -34,7 +34,6 @@ const UserFollowsTag = sequelize.define(
 );
 
 Tags.belongsToMany(Users, { through: UserFollowsTag, unique: false, foreignKey: 'id_tag' });
-Users.belongsToMany(Tags, { through: UserFollowsTag, uniqueKey: false, foreignKey: 'id_user' });
-
+Users.belongsToMany(Tags, { through: UserFollowsTag, unique: false, foreignKey: 'id_user' });
 
 module.exports = UserFollowsTag;

@@ -34,6 +34,6 @@ const UserLikesToComment = sequelize.define(
 );
 
 Comments.belongsToMany(Users, { through: UserLikesToComment, unique: false, foreignKey: 'id_comment' });
-Users.belongsToMany(Comments, { through: UserLikesToComment, uniqueKey: false, foreignKey: 'id_user' });
+Users.belongsToMany(Comments, { through: UserLikesToComment, unique: false, foreignKey: 'id_user' });
 
 module.exports = UserLikesToComment;

@@ -107,7 +107,7 @@ router.put("/:comment_id/upvote", verifySession(), async (req, res) => {
   let userHasAlreadyLiked;
 
   try {
-    findPost = await Comments.findOne({ where: { id: commentId }, });
+    findPost = await Comments.findOne({ where: { id: commentId } });
 
     if (findPost === null)
       return res.status(400).json({ message: "Comment is not found!" });
@@ -143,8 +143,8 @@ router.put("/:comment_id/upvote", verifySession(), async (req, res) => {
         return incrementVal + addPostUpvote;
       });
 
-      if (!result) return res.status(400).json({ message: "Liking comment failed!" });
-
+      if (!result)
+        return res.status(400).json({ message: "Liking comment failed!" });
     } else {
       // start transaction
       const result = await sequelize.transaction(async (t) => {
@@ -161,23 +161,27 @@ router.put("/:comment_id/upvote", verifySession(), async (req, res) => {
           { transaction: t }
         );
 
-        const removePostUpvote = await UserLikesToComment.destroy({
+        const removePostUpvote = await UserLikesToComment.destroy(
+          {
             where: {
               id_comment: commentId,
               id_user: userId,
-            }
+            },
           },
           { transaction: t }
         );
 
         return decrementVal + removePostUpvote;
       });
-      if (!result) return res.status(400).json({ message: "disliking comment failed!" });
+      if (!result)
+        return res.status(400).json({ message: "disliking comment failed!" });
     }
   } catch (e) {
     return res.status(500).send(e);
   }
-  const msg = `Successfully ${userHasAlreadyLiked === null ? "liking" : "disliking" } comment!`
+  const msg = `Successfully ${
+    userHasAlreadyLiked === null ? "liking" : "disliking"
+  } comment!`;
   return res.status(200).json({ message: msg });
 });
 

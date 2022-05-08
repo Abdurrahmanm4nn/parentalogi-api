@@ -10,18 +10,17 @@ const UserFollowsTag = require("./../models/userFollowsTag");
 let app = express();
 
 router.get("/", async (req, res, next) => {
-  const postId = req.query.id;
+  const tagId = req.query.id;
   let data;
 
   try {
-    if (postId) {
+    if (tagId) {
       data = await Tags.findOne({
         where: {
-          id: postId
-        }
-      })
-    }
-    else {
+          id: tagId,
+        },
+      });
+    } else {
       data = await Tags.findAll();
     }
   } catch (e) {
@@ -32,19 +31,19 @@ router.get("/", async (req, res, next) => {
 });
 
 router.post("/", verifySession(), async (req, res) => {
-  const { namaTag, deskripsiTag, warnaTag } = req.body;
+  const { nama, deskripsi, warna } = req.body;
   let data;
 
   try {
     // TODO: add validation for unfilled fields
-    const findSameTagname = await Tags.findOne({ where: { nama: namaTag } });
+    const findSameTagname = await Tags.findOne({ where: { nama: nama } });
     if (findSameTagname)
-        return res.status(400).json({ message: "Same tag name is found!" });
+      return res.status(400).json({ message: "Same tag name is found!" });
 
     data = await Tags.create({
-      nama: namaTag,
-      deskripsi: deskripsiTag,
-      warna: warnaTag,
+      nama: nama,
+      deskripsi: deskripsi,
+      warna: warna,
     });
   } catch (e) {
     return res.status(500).send(e);
@@ -54,23 +53,22 @@ router.post("/", verifySession(), async (req, res) => {
 });
 
 router.put("/:tag_id", verifySession(), async (req, res) => {
-  const { namaTag, deskripsiTag, warnaTag } = req.body;
+  const { nama, deskripsi, warna } = req.body;
   const tagId = req.params.tag_id;
 
   try {
     // TODO: add validation for unfilled fields
     const findTag = await Tags.findOne({ where: { id: tagId } });
-    if (!findTag)
-      return res.status(400).json({ message: "Tag not found!" });
-    const findSameTagname = await Tags.findOne({ where: { nama: namaTag } });
+    if (!findTag) return res.status(400).json({ message: "Tag not found!" });
+    const findSameTagname = await Tags.findOne({ where: { nama: nama } });
     if (findSameTagname)
       return res.status(400).json({ message: "Same tag name is found!" });
 
     await Tags.update(
       {
-        nama: namaTag,
-        deskripsi: deskripsiTag,
-        warna: warnaTag,
+        nama: nama,
+        deskripsi: deskripsi,
+        warna: warna,
       },
       {
         where: { id: tagId },
@@ -89,10 +87,11 @@ router.put("/:tagId/follow", verifySession(), async (req, res) => {
 
   try {
     const findTag = await Tags.findOne({ where: { id: tagId } });
-    if (!findTag)
-      return res.status(400).json({ message: "Tag not found!" });
+    if (!findTag) return res.status(400).json({ message: "Tag not found!" });
 
-    findFollowedTag = await UserFollowsTag.findOne({ where: {id_user: userId, id_tag: tagId} });
+    findFollowedTag = await UserFollowsTag.findOne({
+      where: { id_user: userId, id_tag: tagId },
+    });
     if (findFollowedTag == null) {
       await UserFollowsTag.create({
         id_user: userId,
@@ -103,10 +102,9 @@ router.put("/:tagId/follow", verifySession(), async (req, res) => {
         where: {
           id_user: userId,
           id_tag: tagId,
-        }
+        },
       });
     }
-
   } catch (e) {
     return res.status(500).send(e);
   }

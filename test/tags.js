@@ -39,10 +39,10 @@ describe("Tags", () => {
   describe("/POST create tag", () => {
     it("should POST correct tag body", (done) => {
       let body = {
-        namaTag: "pengasuhan",
-        deskripsiTag:
+        nama: "pengasuhan",
+        deskripsi:
           "Pengasuhan mengacu pada interaksi antara orang tua dan anak",
-        warnaTag: "#f7a961",
+        warna: "#f7a961",
       };
       agent
         .post("/tags")
@@ -61,10 +61,10 @@ describe("Tags", () => {
 
     it("should not POST when same tag name exists", (done) => {
       let body = {
-        namaTag: "pengasuhan",
-        deskripsiTag:
+        nama: "pengasuhan",
+        deskripsi:
           "Pengasuhan mengacu pada interaksi antara orang tua dan anak",
-        warnaTag: "#f7a961",
+        warna: "#f7a961",
       };
       agent
         .post("/tags")
@@ -83,10 +83,10 @@ describe("Tags", () => {
   describe("/PUT update tag", () => {
     it("should PUT correct tag id with correct tag body", (done) => {
       let body = {
-        namaTag: "parenting",
-        deskripsiTag:
+        nama: "parenting",
+        deskripsi:
           "Pengasuhan mengacu pada interaksi antara parents to children",
-        warnaTag: "#f7a955",
+        warna: "#f7a955",
       };
       agent
         .put(`/tags/${tagHelper}`)
@@ -108,10 +108,10 @@ describe("Tags", () => {
 
     it("should not PUT when same tag name exists", (done) => {
       let body = {
-        namaTag: "parenting",
-        deskripsiTag:
+        nama: "parenting",
+        deskripsi:
           "Pengasuhan mengacu pada interaksi antara orang tua dan anak",
-        warnaTag: "#f7a961",
+        warna: "#f7a961",
       };
       agent
         .put(`/tags/${tagHelper}`)
