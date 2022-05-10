@@ -49,9 +49,9 @@ function slugify(text) {
     .replace(/\s+/g, "-") // collapse whitespace and replace by -
     .replace(/-+/g, "-"); // collapse dashes
 
-  const randmin = Math.ceil(1000);
-  const randmax = Math.floor(9999);
-  const randUID = Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+  const min = Math.ceil(1000);
+  const max = Math.floor(9999);
+  const randUID = Math.floor(Math.random() * (max - min) + min);
 
   text += `-${randUID}`;
 
@@ -91,7 +91,6 @@ router.get("/", async function (req, res, next) {
 
   return res.status(200).json(data);
 });
-
 
 router.get("/:slug/comments", async function (req, res) {
   const commentId = req.params.comment_id;
@@ -297,4 +296,3 @@ router.put("/:slug/like", verifySession(), async (req, res) => {
 app.use(supertoken.errorHandler());
 
 module.exports = router;
-
