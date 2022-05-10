@@ -1,13 +1,15 @@
 var express = require("express");
 var router = express.Router();
-var EmailPassword = require('supertokens-node/recipe/emailpassword');
-let supertoken = require('supertokens-node/framework/express');
-let { verifySession } = require('supertokens-node/recipe/session/framework/express');
-let Session = require('supertokens-node/recipe/session');
-const Users = require('./../models/users');
-const cookieParser = require('cookie-parser');
+var EmailPassword = require("supertokens-node/recipe/emailpassword");
+let supertoken = require("supertokens-node/framework/express");
+let {
+  verifySession,
+} = require("supertokens-node/recipe/session/framework/express");
+let Session = require("supertokens-node/recipe/session");
+const Users = require("./../models/users");
 let app = express();
-let req = supertoken.SessionRequest;
+const fetch = require("fetch-base64");
+const getProfilePicture = require("./../utils/photoUpload");
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
@@ -19,7 +21,7 @@ router.get("/profile", verifySession(), async (req, res) => {
   let session = req.session;
   // get the user's Id from the session
   let userId = session.getUserId();
-  res.cookie('user_id', userId);
+  res.cookie("user_id", userId);
   let profile;
 
   try {
@@ -34,41 +36,42 @@ router.get("/profile", verifySession(), async (req, res) => {
   }
   return res.status(200).json(profile[0]);
 });
-router.put("/edit-profile", async (req, res) => {
-  // get the supertokens session object from the req
-  let cookies = req.cookies;
-
-  //verifySession()
-  if (cookies === undefined){
-    return res.status(401).send("Please login first!");
-  }
-
-  // get the user's Id from the session
-  let userId = cookies.user_id;
-
+router.put("/edit-profile", verifySession(), async (req, res) => {
+  let userId = req.session.getUserId();
   let data;
 
-  let field = req.body;
+  const { nama_pengguna, nama, bio, tanggal_lahir, domisili, pekerjaan } =
+    req.body;
+  const nameURLParsed = nama.toLowerCase().replace(/\s+/g, "-");
+  const base64AnonProfilePicture = await fetch.remote(
+    `https://avatars.dicebear.com/api/initials/${nameURLParsed}.png`
+  );
+  const profilePictureFilename = getProfilePicture(
+    req.body.profilePicture || base64AnonProfilePicture[0],
+    "avatar"
+  );
+
   try {
     data = await Users.update(
-    {
-      nama_pengguna : field.nama_pengguna,
-      nama : field.nama,
-      bio: field.bio,
-      tanggal_lahir: field.tanggal_lahir,
-      domisili: field.domisili,
-      pekerjaan: field.pekerjaan
-    },
-    {
-      where : {
-        user_id : userId
+      {
+        nama_pengguna: nama_pengguna,
+        nama: nama,
+        bio: bio,
+        tanggal_lahir: tanggal_lahir,
+        domisili: domisili,
+        pekerjaan: pekerjaan,
+        foto_profil: profilePictureFilename,
+      },
+      {
+        where: {
+          user_id: userId,
+        },
       }
-    });
-  } catch (e){
+    );
+  } catch (e) {
     return res.status(500).send(e);
   }
-  return res.status(200).json({message : 'Successfully Updating Profile!'});
-
+  return res.status(200).json({ message: "Successfully Updating Profile!" });
 });
 router.put("/change-password", async (req, res) => {
   // get the supertokens session object from the req
@@ -106,7 +109,7 @@ router.put("/change-password", async (req, res) => {
     return res.status(500);
   }
 
-  return res.status(200).json({"message" : "Successfully Changing password!"});
+  return res.status(200).json({ message: "Successfully Changing password!" });
 });
 
 // Add this AFTER all your routes

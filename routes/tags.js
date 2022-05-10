@@ -36,7 +36,9 @@ router.post("/", verifySession(), async (req, res) => {
 
   try {
     // TODO: add validation for unfilled fields
-    const findSameTagname = await Tags.findOne({ where: { nama: nama } });
+    const findSameTagname = await Tags.findOne({
+      where: { nama: nama },
+    });
     if (findSameTagname)
       return res.status(400).json({ message: "Same tag name is found!" });
 

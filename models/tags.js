@@ -26,4 +26,24 @@ const Tags = sequelize.define('tags', {
     updatedAt: { type: Sequelize.DATE, allowNull: false },
 });
 
+Tags.addScope('toView',
+  {
+   attributes: {
+     exclude: [
+      'createdAt',
+      'updatedAt'
+    ] }
+  }
+);
+
+Tags.addScope('onlyIdAndName',
+  {
+   attributes: {
+     include: [
+      'id',
+      'nama'
+    ] }
+  }
+);
+
 module.exports = Tags;

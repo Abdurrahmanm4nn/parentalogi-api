@@ -1,3 +1,4 @@
 require("./test/users")
-require("./test/comments")
 require("./test/tags")
+require("./test/posts")
+require("./test/comments")

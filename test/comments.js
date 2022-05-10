@@ -9,7 +9,7 @@ let should = chai.should();
 
 chai.use(chaiHttp);
 
-let commentHelper = { commentId: null, childCommentId: null };
+let commentHelper = { postId: null, commentId: null, childCommentId: null };
 
 let agent = chai.request.agent(server);
 
@@ -30,6 +30,21 @@ describe("Comments", () => {
     };
 
     await agent.post("/signin").send(user);
+
+    const postBody = {
+      postTitle: "Hobi Jalan-jalan, Rumah Sudah Punya Belum?",
+      postContent:
+        "<p>Dalam sistem pembelian rumah, mencicil secara Kredit Pemilikan Rumah adalah pilihan paling populer bagi pembeli rumah pertama kali.</p>",
+      postCover: "",
+      tags: [],
+    };
+
+    await agent
+      .post("/posts")
+      .send(postBody)
+      .then(res => {
+        commentHelper.postId = res.body.data.id;
+      });
   });
 
   after(function () {
@@ -39,7 +54,7 @@ describe("Comments", () => {
   describe("/POST create comment", () => {
     it("should POST correct comment body", (done) => {
       let body = {
-        postId: 1,
+        postId: commentHelper.postId,
         orangtua: 0,
         isiText: "Ini komentar saya",
       };
@@ -60,7 +75,7 @@ describe("Comments", () => {
 
     it("should POST correct comment body and corrent parent id", (done) => {
       let body = {
-        postId: 1,
+        postId: commentHelper.postId,
         orangtua: commentHelper.commentId,
         isiText: "Ini komentar balasan saya",
       };
@@ -88,7 +103,7 @@ describe("Comments", () => {
 
     it("should not POST when post doesn't exist", (done) => {
       let body = {
-        postId: 8,
+        postId: commentHelper.postId + 20,
         orangtua: 0,
         isiText: "Ini komentar saya yang lain",
       };
@@ -105,7 +120,7 @@ describe("Comments", () => {
 
     it("should not POST when parent comment doesn't exist", (done) => {
       let body = {
-        postId: 1,
+        postId: commentHelper.postId,
         orangtua: 9,
         isiText: "Ini komentar saya yang lain",
       };
@@ -124,7 +139,7 @@ describe("Comments", () => {
 
     it("should not POST when comment content is not provided", (done) => {
       let body = {
-        postId: 1,
+        postId: commentHelper.postId,
         orangtua: 0,
         isiText: "",
       };

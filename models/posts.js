@@ -33,6 +33,7 @@ const Posts = sequelize.define("posts", {
     allowNull: false,
     defaultValue: 0,
   },
+  foto_cover: { type: Sequelize.STRING, defaultValue: null },
   createdAt: { type: Sequelize.DATE, allowNull: false },
   telah_dihapus: {
     type: Sequelize.BOOLEAN,
@@ -51,8 +52,7 @@ Posts.addScope('toView',
   {
    attributes: {
      exclude: [
-      'telah_dihapus',
-      'telah_diubah'
+      'telah_dihapus'
     ] }
   }
 );
