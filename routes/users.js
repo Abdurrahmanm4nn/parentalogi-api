@@ -6,6 +6,7 @@ let { verifySession } = require('supertokens-node/recipe/session/framework/expre
 let Session = require('supertokens-node/recipe/session');
 const Users = require('./../models/users');
 const FollowsUser = require('./../models/userFollowsUser');
+const ReadingList = require('./../models/readingList');
 const cookieParser = require('cookie-parser');
 let app = express();
 let req = supertoken.SessionRequest;
@@ -139,6 +140,25 @@ router.post('/:user_id/follow', verifySession(), async (req, res) => {
   }
 
   return res.status(200).send("You followed/unfollowed a user!");
+});
+router.get("/reading-list", verifySession(), async (req, res) => {
+  // get the supertokens session object from the req
+  let session = req.session;
+  // get the user's Id from the session
+  let userId = session.getUserId();
+  let result;
+
+  try {
+    result = await ReadingList.findAll({
+      where: {
+        id_user: userId
+      }
+    });
+  } catch (error) {
+    return res.status(500).send("Error occured when trying to follow/unfollow a user!");
+  }
+
+  return res.status(200).json(result[0]);
 });
 
 // Add this AFTER all your routes
