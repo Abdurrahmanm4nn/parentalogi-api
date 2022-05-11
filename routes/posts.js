@@ -6,6 +6,7 @@ let {
   verifySession,
 } = require("supertokens-node/recipe/session/framework/express");
 const { sequelize } = require("./../models/baseModel");
+const { Op } = require("sequelize");
 const Comments = require("./../models/comments");
 const Posts = require("./../models/posts");
 const Tags = require("./../models/tags");
@@ -77,6 +78,9 @@ router.get("/", async function (req, res, next) {
     if (query.page && query.limit && !query.id && !query.tag) {
       const { limit, offset } = getPagination(query.page, query.limit);
       data = await Posts.scope("toView").findAndCountAll({
+        where: {
+          ...(query.q ? {judul: { [Op.substring]: query.q }} : {})
+        },
         order: [["id", "DESC"]],
         limit: limit,
         offset: offset,
@@ -95,8 +99,13 @@ router.get("/", async function (req, res, next) {
       data = await getPost(query.id);
     } else {
       data = await Posts.scope("toView").findAll({
+        where: {
+          ...(query.q ? {judul: { [Op.substring]: query.q }} : {})
+        },
         order: [["id", "DESC"]],
-        include: [Tags],
+        include: {
+          model: Tags,
+        },
       });
     }
   } catch (e) {
