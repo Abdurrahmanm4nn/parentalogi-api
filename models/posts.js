@@ -33,6 +33,7 @@ const Posts = sequelize.define("posts", {
     allowNull: false,
     defaultValue: 0,
   },
+  foto_cover: { type: Sequelize.STRING, defaultValue: null },
   createdAt: { type: Sequelize.DATE, allowNull: false },
   telah_dihapus: {
     type: Sequelize.BOOLEAN,
@@ -46,5 +47,14 @@ const Posts = sequelize.define("posts", {
   },
   updatedAt: { type: Sequelize.DATE, allowNull: false },
 });
+
+Posts.addScope('toView',
+  {
+   attributes: {
+     exclude: [
+      'telah_dihapus'
+    ] }
+  }
+);
 
 module.exports = Posts;
