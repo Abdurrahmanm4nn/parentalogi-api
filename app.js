@@ -84,7 +84,6 @@ supertokens.init({
         },
         createAndSendCustomEmail: async (user, passwordResetURLWithToken) => {
           let { id, email } = user;
-          // TODO:
           let url = passwordResetURLWithToken;
           const mailData = {
             from: process.env.EMAIL_USER, // sender address
@@ -116,11 +115,11 @@ supertokens.init({
                 user,
                 emailVerificationURLWithToken
               ) => {
-                let { id, email } = user;
+                const { id, email } = user;
                 // TODO:
-                let url = emailVerificationURLWithToken;
+                const url = emailVerificationURLWithToken;
 
-                let userInfo = await EmailPassword.getUserByEmail(email);
+                const userInfo = await EmailPassword.getUserByEmail(email);
                 if (userInfo === undefined) {
                   return app.response
                     .status(401)
@@ -138,12 +137,10 @@ supertokens.init({
                   if (err) {
                     return app.response.status(500).send(err);
                   }
-                  return app.response
-                    .status(200)
-                    .send({
-                      message: "Verification email sent!",
-                      message_id: info.messageId,
-                    });
+                  return app.response.status(200).send({
+                    message: "Verification email sent!",
+                    message_id: info.messageId,
+                  });
                 });
               },
             };
@@ -206,8 +203,8 @@ supertokens.init({
           return {
             ...originalImplementation,
             createNewSession: async function (input) {
-              let userId = input.userId;
-              let user = getUserById(userId);
+              const userId = input.userId;
+              const user = getUserById(userId);
               input.accessTokenPayload = {
                 ...input.accessTokenPayload,
                 user,

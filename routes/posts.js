@@ -8,6 +8,7 @@ let {
 const { sequelize } = require("./../models/baseModel");
 const { Op } = require("sequelize");
 const Comments = require("./../models/comments");
+const Users = require("./../models/users");
 const Posts = require("./../models/posts");
 const Tags = require("./../models/tags");
 const UserLikesToPost = require("./../models/userLikesToPost");
@@ -19,6 +20,9 @@ const getPostCover = require("./../utils/photoUpload");
 
 Posts.hasMany(Comments, { foreignKey: "id_post" });
 Comments.belongsTo(Posts, { foreignKey: "id_post" });
+
+Users.hasMany(Posts, { foreignKey: "id_penulis" });
+Posts.belongsTo(Users, { foreignKey: "id_penulis" });
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -79,12 +83,19 @@ router.get("/", async function (req, res, next) {
       const { limit, offset } = getPagination(query.page, query.limit);
       data = await Posts.scope("toView").findAndCountAll({
         where: {
-          ...(query.q ? {judul: { [Op.substring]: query.q }} : {})
+          ...(query.q ? { judul: { [Op.substring]: query.q } } : {}),
         },
         order: [["id", "DESC"]],
         limit: limit,
         offset: offset,
-        include: [Tags],
+        include: [
+          {
+            model: Tags,
+          },
+          {
+            model: Users,
+          }
+        ],
       });
       data = getPagingData(data, query.page, limit);
     } else if (query.tag) {
@@ -100,12 +111,17 @@ router.get("/", async function (req, res, next) {
     } else {
       data = await Posts.scope("toView").findAll({
         where: {
-          ...(query.q ? {judul: { [Op.substring]: query.q }} : {})
+          ...(query.q ? { judul: { [Op.substring]: query.q } } : {}),
         },
         order: [["id", "DESC"]],
-        include: {
-          model: Tags,
-        },
+        include: [
+          {
+            model: Tags,
+          },
+          {
+            model: Users,
+          }
+        ],
       });
     }
   } catch (e) {
