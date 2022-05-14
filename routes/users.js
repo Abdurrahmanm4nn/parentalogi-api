@@ -268,7 +268,7 @@ router.get("/:username", verifySession({sessionRequired: false}), async (req, re
     });
   }
 
-  return res.status(200).json(result);
+  return res.status(200).json(result[0]);
 });
 
 // Add this AFTER all your routes
