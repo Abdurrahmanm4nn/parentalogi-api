@@ -10,10 +10,13 @@ let Session = require('supertokens-node/recipe/session');
 const Users = require('./../models/users');
 const FollowsUser = require('./../models/userFollowsUser');
 const ReadingList = require('./../models/readingList');
+const UserLikesToPost = require("./../models/userLikesToPost");
+const UserFollowsTag = require("./../models/userFollowsTag");
 const cookieParser = require('cookie-parser');
 let app = express();
 const fetch = require("fetch-base64");
 const getProfilePicture = require("./../utils/photoUpload");
+const UserFollowsUser = require("./../models/userFollowsUser");
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
@@ -186,7 +189,64 @@ router.get("/reading-list", verifySession(), async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).send("Error occured when trying to follow/unfollow a user!");
+    return res.status(500).send("Error occured when trying to get your reading list!");
+  }
+
+  return res.status(200).json(result[0]);
+});
+router.get("/liked-posts", verifySession(), async (req, res) => {
+  // get the supertokens session object from the req
+  let session = req.session;
+  // get the user's Id from the session
+  let userId = session.getUserId();
+  let result;
+
+  try {
+    result = await UserLikesToPost.findAll({
+      where: {
+        id_user: userId
+      }
+    });
+  } catch (error) {
+    return res.status(500).send("Error occured when trying to get your liked posts!");
+  }
+
+  return res.status(200).json(result[0]);
+});
+router.get("/followed-users", verifySession(), async (req, res) => {
+  // get the supertokens session object from the req
+  let session = req.session;
+  // get the user's Id from the session
+  let userId = session.getUserId();
+  let result;
+
+  try {
+    result = UserFollowsUser.findAll({
+      where: {
+        id_pengikut: userId
+      }
+    });
+  } catch (error) {
+    return res.status(500).send("Error occured when trying to get your followed users!");
+  }
+
+  return res.status(200).json(result[0]);
+});
+router.get("/followed-tags", verifySession(), async (req, res) => {
+  // get the supertokens session object from the req
+  let session = req.session;
+  // get the user's Id from the session
+  let userId = session.getUserId();
+  let result;
+
+  try {
+    result = UserFollowsTag.findAll({
+      where: {
+        id_user: userId
+      }
+    });
+  } catch (error) {
+    return res.status(500).send("Error occured when trying to get your followed tags!");
   }
 
   return res.status(200).json(result[0]);

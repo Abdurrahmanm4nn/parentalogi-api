@@ -16,7 +16,7 @@ const UserLikesToPost = sequelize.define(
   "user_likes_to_post",
   {
     id_user: {
-      type: Sequelize.INTEGER(11),
+      type: Sequelize.CHAR(36),
       primaryKey: true,
       allowNull: false,
     },
