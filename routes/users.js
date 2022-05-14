@@ -221,7 +221,7 @@ router.get("/followed-users", verifySession(), async (req, res) => {
   let result;
 
   try {
-    result = UserFollowsUser.findAll({
+    result = await UserFollowsUser.findAll({
       where: {
         id_pengikut: userId
       }
@@ -240,7 +240,7 @@ router.get("/followed-tags", verifySession(), async (req, res) => {
   let result;
 
   try {
-    result = UserFollowsTag.findAll({
+    result = await UserFollowsTag.findAll({
       where: {
         id_user: userId
       }
@@ -250,6 +250,25 @@ router.get("/followed-tags", verifySession(), async (req, res) => {
   }
 
   return res.status(200).json(result[0]);
+});
+router.get("/:username", verifySession({sessionRequired: false}), async (req, res) => {
+  let result;
+  let username = req.params.username;
+
+  try {
+    result = await Users.scope("profile").findAll({
+      where: {
+        nama_pengguna: username
+      },
+    });
+  } catch (error) {
+    return res.status(500).send({
+      "What happened": "Error occured while retrieving profile data for this user!",
+      "Error": error
+    });
+  }
+
+  return res.status(200).json(result);
 });
 
 // Add this AFTER all your routes
