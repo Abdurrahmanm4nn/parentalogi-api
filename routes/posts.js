@@ -13,6 +13,7 @@ const Posts = require("./../models/posts");
 const Tags = require("./../models/tags");
 const UserLikesToPost = require("./../models/userLikesToPost");
 const PostToTag = require("./../models/postToTag");
+const ReadingList = require('./../models/readingList');
 let app = express();
 let req = supertoken.SessionRequest;
 const { body, param, validationResult } = require("express-validator");
@@ -413,6 +414,72 @@ router.put(
     return res.status(200).json({ message: msg });
   }
 );
+router.post(
+  "/:slug/save",
+  param("slug")
+    .isSlug()
+    .custom(async (value) => {
+      const slugExists = await Posts.findOne({ where: { slug: value } });
+      if (!slugExists) throw new Error("Slug doesn't exist!");
+      else return true;
+    }), 
+  verifySession(), 
+  async (req, res) => {
+    // ------------------ validation -------------------------
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // -------------------------------------------------------
+    const slug = req.params.slug;
+    const userId = req.session.getUserId();
+    let userHasAlreadySaved;
+    const data = await getPost(null, slug);
+    const { id: postId } = data.toJSON();
+
+    try {
+      userHasAlreadySaved = await ReadingList.findOne({
+        where: { id_post: postId, id_user: userId },
+      });
+
+      if(userHasAlreadySaved === null){
+        const result = await sequelize.transaction(async (t) => {
+          const savePost = await ReadingList.create({
+            id_user: userId,
+            id_post: postId
+          },
+          { transaction: t });
+
+          return savePost;
+        });
+
+        if (!result)
+          return res.status(400).json({ message: "Saving post failed!" });
+      } else {
+        const result = await sequelize.transaction(async (t) => {
+          const unsavePost = await ReadingList.destroy({
+            where: {
+              id_user: userId,
+              id_post: postId
+            },
+            transaction: t
+          });
+
+          return unsavePost;
+        });
+        if (!result)
+          return res.status(400).json({ message: "Unsaving post failed!" });
+      }
+    } catch (e) {
+      return res.status(500).send(e);
+    }
+
+    const msg = `Successfully ${
+      userHasAlreadySaved === null ? "saving" : "unsaving"
+    } post!`;
+
+    return res.status(200).json({ message: msg });
+});
 
 app.use(supertoken.errorHandler());
 
