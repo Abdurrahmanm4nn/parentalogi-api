@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+const { sequelize } = require("./../models/baseModel");
 var EmailPassword = require("supertokens-node/recipe/emailpassword");
 let supertoken = require("supertokens-node/framework/express");
 let {
@@ -120,30 +121,56 @@ router.post('/:user_id/follow', verifySession(), async (req, res) => {
   // get the user's Id from the session
   let userId = session.getUserId();
   let toFollow = req.params.user_id;
-
-  const userHasAlreadyFollowed = await FollowsUser.findOne({
-    where: { id_pengikut: userId, id_diikuti: toFollow },
-  });
+  let userHasAlreadyFollowed;
 
   try {
-    if (!userHasAlreadyFollowed){
-      await FollowsUser.create({
-        id_pengikut: userId,
-        id_diikuti: toFollow
-      });
-    }else{
-      await FollowsUser.destroy({
-        where: {
-          id_pengikut: userId,
-          id_diikuti: toFollow
-        }
-      });
-    }
-  } catch (error) {
-    return res.status(500).send("Error occured when trying to follow/unfollow a user!");
-  }
+    userHasAlreadyFollowed = await FollowsUser.findOne({
+      where: { id_pengikut: userId, id_diikuti: toFollow },
+    });
+    // check whether the user has already liked the comment
+    if (userHasAlreadyFollowed === null) {
+      // start transaction
+      const result = await sequelize.transaction(async (t) => {
 
-  return res.status(200).send("You followed/unfollowed a user!");
+        const followingUser = await FollowsUser.create(
+          {
+            id_pengikut: userId,
+            id_diikuti: toFollow
+          },
+          { transaction: t }
+        );
+
+        return followingUser;
+      });
+
+      if (!result)
+        return res.status(400).json({ message: "Following user failed!" });
+    } else {
+      // start transaction
+      const result = await sequelize.transaction(async (t) => {
+
+        const unfollowingUser = await FollowsUser.destroy(
+          {
+            where: {
+              id_pengikut: userId,
+              id_diikuti: toFollow
+            }
+          },
+          { transaction: t }
+        );
+
+        return unfollowingUser;
+      });
+      if (!result)
+        return res.status(400).json({ message: "Unfollowing user failed!" });
+    }
+  } catch (e) {
+    return res.status(500).send(e);
+  }
+  const msg = `Successfully ${
+    userHasAlreadyFollowed === null ? "following" : "unfollowing"
+  } user!`;
+  return res.status(200).json({ message: msg });
 });
 router.get("/reading-list", verifySession(), async (req, res) => {
   // get the supertokens session object from the req
