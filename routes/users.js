@@ -16,7 +16,6 @@ const cookieParser = require('cookie-parser');
 let app = express();
 const fetch = require("fetch-base64");
 const getProfilePicture = require("./../utils/photoUpload");
-const UserFollowsUser = require("./../models/userFollowsUser");
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
@@ -30,13 +29,27 @@ router.get("/profile", verifySession(), async (req, res) => {
   let userId = session.getUserId();
   res.cookie("user_id", userId);
   let profile;
+  let following;
+  let followedBy;
 
   try {
+    following = await FollowsUser.count({
+      where: {
+        id_pengikut: userId
+      }
+    });
+    followedBy = await FollowsUser.count({
+      where: {
+        id_diikuti: userId
+      }
+    });
     let userData = await Users.scope("profile").findAll({
       where: {
         user_id: userId,
       },
     });
+    userData[0].setDataValue("following", following);
+    userData[0].setDataValue("followedBy", followedBy);
     profile = userData;
   } catch (e) {
     return res.status(500).send(e);
@@ -118,15 +131,22 @@ router.put("/change-password", async (req, res) => {
 
   return res.status(200).json({ message: "Successfully Changing password!" });
 });
-router.post('/:user_id/follow', verifySession(), async (req, res) => {
+router.post('/:username/follow', verifySession(), async (req, res) => {
   // get the supertokens session object from the req
   let session = req.session;
   // get the user's Id from the session
   let userId = session.getUserId();
-  let toFollow = req.params.user_id;
+  let userNameToFollow = req.params.username;
   let userHasAlreadyFollowed;
 
   try {
+    let designatedUserId = await Users.findAll({
+      where: {
+        nama_pengguna: userNameToFollow
+      },
+      attributes: ['user_id']
+    });
+    let toFollow = designatedUserId[0].getDataValue("user_id");
     userHasAlreadyFollowed = await FollowsUser.findOne({
       where: { id_pengikut: userId, id_diikuti: toFollow },
     });
@@ -218,19 +238,33 @@ router.get("/followed-users", verifySession(), async (req, res) => {
   let session = req.session;
   // get the user's Id from the session
   let userId = session.getUserId();
-  let result;
+  let result = [];
 
   try {
-    result = await UserFollowsUser.findAll({
+    let followedId = await FollowsUser.findAll({
       where: {
         id_pengikut: userId
-      }
+      },
+      attributes: ['id_diikuti']
     });
+    let userLists = [];
+    for (const key in followedId) {
+      userLists.push(followedId[key].getDataValue('id_diikuti'));
+    }
+    for (const key in userLists) {
+      //console.log(userLists[key]);
+      let records = await Users.scope("sneak-peek").findOne({
+        where: {
+          user_id: userLists[key]
+        }
+      });
+      result[key] = records;
+    }
   } catch (error) {
-    return res.status(500).send("Error occured when trying to get your followed users!");
+    return res.status(500).send(error);
   }
 
-  return res.status(200).json(result[0]);
+  return res.status(200).json(result);
 });
 router.get("/followed-tags", verifySession(), async (req, res) => {
   // get the supertokens session object from the req
@@ -253,6 +287,9 @@ router.get("/followed-tags", verifySession(), async (req, res) => {
 });
 router.get("/:username", verifySession({sessionRequired: false}), async (req, res) => {
   let result;
+  let following;
+  let followedBy;
+  let userId;
   let username = req.params.username;
 
   try {
@@ -261,6 +298,24 @@ router.get("/:username", verifySession({sessionRequired: false}), async (req, re
         nama_pengguna: username
       },
     });
+    userId = await Users.findAll({
+      where: {
+        nama_pengguna: username
+      },
+      attributes: ['user_id']
+    });
+    following = await FollowsUser.count({
+      where: {
+        id_pengikut: userId[0].getDataValue("user_id")
+      }
+    });
+    followedBy = await FollowsUser.count({
+      where: {
+        id_diikuti: userId[0].getDataValue("user_id")
+      }
+    });
+    result[0].setDataValue("following", following);
+    result[0].setDataValue("followedBy", followedBy);
   } catch (error) {
     return res.status(500).send({
       "What happened": "Error occured while retrieving profile data for this user!",
