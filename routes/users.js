@@ -212,7 +212,7 @@ router.get("/reading-list", verifySession(), async (req, res) => {
     return res.status(500).send("Error occured when trying to get your reading list!");
   }
 
-  return res.status(200).json(result[0]);
+  return res.status(200).json(result);
 });
 router.get("/liked-posts", verifySession(), async (req, res) => {
   // get the supertokens session object from the req
@@ -231,7 +231,7 @@ router.get("/liked-posts", verifySession(), async (req, res) => {
     return res.status(500).send("Error occured when trying to get your liked posts!");
   }
 
-  return res.status(200).json(result[0]);
+  return res.status(200).json(result);
 });
 router.get("/followed-users", verifySession(), async (req, res) => {
   // get the supertokens session object from the req
@@ -283,7 +283,7 @@ router.get("/followed-tags", verifySession(), async (req, res) => {
     return res.status(500).send("Error occured when trying to get your followed tags!");
   }
 
-  return res.status(200).json(result[0]);
+  return res.status(200).json(result);
 });
 router.get("/:username", verifySession({sessionRequired: false}), async (req, res) => {
   let result;
