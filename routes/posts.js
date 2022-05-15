@@ -13,7 +13,7 @@ const Posts = require("./../models/posts");
 const Tags = require("./../models/tags");
 const UserLikesToPost = require("./../models/userLikesToPost");
 const PostToTag = require("./../models/postToTag");
-const ReadingList = require('./../models/readingList');
+const ReadingList = require("./../models/readingList");
 let app = express();
 let req = supertoken.SessionRequest;
 const { body, param, validationResult } = require("express-validator");
@@ -95,24 +95,35 @@ router.get("/", async function (req, res, next) {
           },
           {
             model: Users,
-          }
+            attributes: ['nama_pengguna', 'nama']
+          },
         ],
       });
       data = getPagingData(data, query.page, limit);
     } else if (query.tag) {
-      data = await Tags.scope("toView").findAll({
+      data = await Posts.scope("toView").findAll({
         order: [["id", "DESC"]],
-        where: {
-          nama: query.tag,
-        },
-        include: [Posts],
+        include: [
+          {
+            model: Tags,
+            where: {
+              nama: {
+                [Op.like]: query.tag,
+              },
+            },
+          },
+          {
+            model: Users,
+            attributes: ['nama_pengguna', 'nama']
+          }
+        ],
       });
     } else if (query.id) {
       data = await getPost(query.id);
       let postCreatorData = await Users.scope("comments").findOne({
         where: {
-          user_id: data.id_penulis
-        }
+          user_id: data.id_penulis,
+        },
       });
       data.setDataValue("user", postCreatorData);
     } else {
@@ -127,7 +138,8 @@ router.get("/", async function (req, res, next) {
           },
           {
             model: Users,
-          }
+            attributes: ['nama_pengguna', 'nama']
+          },
         ],
       });
     }
@@ -152,8 +164,8 @@ router.get("/:slug/comments", async function (req, res) {
     for (const key in data) {
       let commenterData = await Users.scope("comments").findOne({
         where: {
-          user_id: data[key].getDataValue("id_penulis")
-        }
+          user_id: data[key].getDataValue("id_penulis"),
+        },
       });
       data[key].setDataValue("data_penulis", commenterData);
     }
@@ -220,8 +232,8 @@ router.get("/:slug", async function (req, res, next) {
     data = await getPost(null, slug);
     let postCreatorData = await Users.scope("comments").findOne({
       where: {
-        user_id: data.id_penulis
-      }
+        user_id: data.id_penulis,
+      },
     });
     data.setDataValue("user", postCreatorData);
   } catch (e) {
@@ -445,8 +457,8 @@ router.post(
       const slugExists = await Posts.findOne({ where: { slug: value } });
       if (!slugExists) throw new Error("Slug doesn't exist!");
       else return true;
-    }), 
-  verifySession(), 
+    }),
+  verifySession(),
   async (req, res) => {
     // ------------------ validation -------------------------
     const errors = validationResult(req);
@@ -465,13 +477,15 @@ router.post(
         where: { id_post: postId, id_user: userId },
       });
 
-      if(userHasAlreadySaved === null){
+      if (userHasAlreadySaved === null) {
         const result = await sequelize.transaction(async (t) => {
-          const savePost = await ReadingList.create({
-            id_user: userId,
-            id_post: postId
-          },
-          { transaction: t });
+          const savePost = await ReadingList.create(
+            {
+              id_user: userId,
+              id_post: postId,
+            },
+            { transaction: t }
+          );
 
           return savePost;
         });
@@ -483,9 +497,9 @@ router.post(
           const unsavePost = await ReadingList.destroy({
             where: {
               id_user: userId,
-              id_post: postId
+              id_post: postId,
             },
-            transaction: t
+            transaction: t,
           });
 
           return unsavePost;
@@ -502,7 +516,8 @@ router.post(
     } post!`;
 
     return res.status(200).json({ message: msg });
-});
+  }
+);
 
 app.use(supertoken.errorHandler());
 
