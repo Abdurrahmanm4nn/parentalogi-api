@@ -118,10 +118,6 @@ router.put("/change-password", verifySession(), async (req, res) => {
     password: updatedPassword,
   });
 
-  // revoke all sessions for the user
-  await Session.revokeAllSessionsForUser(userId);
-  // revoke the current user's session, we do this to remove the auth cookies, logging out the user on the frontend.
-  await req.session.revokeSession();
   if (!response) {
     return res.status(500);
   }
