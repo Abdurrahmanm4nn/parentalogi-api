@@ -93,15 +93,10 @@ router.put("/edit-profile", verifySession(), async (req, res) => {
   }
   return res.status(200).json({ message: "Successfully Updating Profile!" });
 });
-router.put("/change-password", async (req, res) => {
-  // get the supertokens session object from the req
-  let cookies = req.cookies;
-  // retrive the old password from the request body
-  let oldPassword = req.body.oldPassword;
-  // retrive the new password from the request body
-  let updatedPassword = req.body.newPassword;
+router.put("/change-password", verifySession(), async (req, res) => {
+  let session = req.session;
   // get the user's Id from the session
-  let userId = cookies.user_id;
+  let userId = session.getUserId();
   // get the signed in user's email from the getUserById function
   let userInfo = await EmailPassword.getUserById(userId);
   if (userInfo === undefined) {
