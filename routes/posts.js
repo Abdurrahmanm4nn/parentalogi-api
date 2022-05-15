@@ -109,6 +109,12 @@ router.get("/", async function (req, res, next) {
       });
     } else if (query.id) {
       data = await getPost(query.id);
+      let postCreatorData = await Users.scope("comments").findOne({
+        where: {
+          user_id: data.id_penulis
+        }
+      });
+      data.setDataValue("user", postCreatorData);
     } else {
       data = await Posts.scope("toView").findAll({
         where: {
@@ -133,15 +139,24 @@ router.get("/", async function (req, res, next) {
 });
 
 router.get("/:slug/comments", async function (req, res) {
+  const slug = req.params.slug;
   let data;
 
   try {
     const post = await getPost(null, slug);
-    data = await Comments.findOne({
+    data = await Comments.findAll({
       where: {
         id_post: post.id,
       },
     });
+    for (const key in data) {
+      let commenterData = await Users.scope("comments").findOne({
+        where: {
+          user_id: data[key].getDataValue("id_penulis")
+        }
+      });
+      data[key].setDataValue("data_penulis", commenterData);
+    }
   } catch (e) {
     return res.status(500).send(e);
   }
@@ -203,7 +218,15 @@ router.get("/:slug", async function (req, res, next) {
 
   try {
     data = await getPost(null, slug);
+    let postCreatorData = await Users.scope("comments").findOne({
+      where: {
+        user_id: data.id_penulis
+      }
+    });
+    data.setDataValue("user", postCreatorData);
   } catch (e) {
+    console.log(data);
+    console.log(e);
     res.status(500).send(e);
   }
 

@@ -53,5 +53,22 @@ Users.addScope("sneak-peek", {
     ],
   },
 });
+Users.addScope("comments", {
+  attributes: {
+    exclude: [
+      "password_hash",
+      "user_id",
+      "createdAt",
+      "updatedAt",
+      "waktu_terakhir_ubah_password",
+      "status",
+      "email",
+      "domisili",
+      "pekerjaan",
+      "tanggal_lahir",
+      "bio"
+    ],
+  },
+});
 
 module.exports = Users;
