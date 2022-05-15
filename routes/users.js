@@ -104,6 +104,8 @@ router.put("/change-password", verifySession(), async (req, res) => {
   }
 
   // call signin to check that input password is correct
+  let oldPassword = req.body.oldPassword;
+  let updatedPassword = req.body.newPassword;
   let isPasswordValid = await EmailPassword.signIn(userInfo.email, oldPassword);
   if (isPasswordValid.status !== "OK") {
     // TODO: handle incorrect password error
