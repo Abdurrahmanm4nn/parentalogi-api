@@ -15,14 +15,14 @@ jobs:
       NODE_ENV: test
       DB_TEST_USERNAME: ${{secrets.DB_TEST_USERNAME}}
       DB_TEST_PASSWORD: ${{secrets.DB_TEST_PASSWORD}}
-      DB_TEST_HOSTNAME: icvmdev.duckdns.org
+      DB_TEST_HOSTNAME: parentalogi.me
       DB_TEST_NAME: parentalogi_test
       DB_TEST_DIALECT: mysql
       EMAIL_USER: ${{secrets.EMAIL_USER}}
       EMAIL_PASS: ${{secrets.EMAIL_PASS}}
       API_DOMAIN: http://localhost:3001
       WEB_DOMAIN: http://localhost:3000
-      ST_TEST_URI: https://icvmdev.duckdns.org/supertokens-test
+      ST_TEST_URI: https://parentalogi.me/supertokens-test
     strategy:
       matrix:
         node-version: [16.x]
