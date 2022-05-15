@@ -109,17 +109,19 @@ router.put("/change-password", verifySession(), async (req, res) => {
   let isPasswordValid = await EmailPassword.signIn(userInfo.email, oldPassword);
   if (isPasswordValid.status !== "OK") {
     // TODO: handle incorrect password error
-    return;
+    return res.status(401).send("Password lama yang anda masukkan salah!");
   }
 
   // update the user's password using updateEmailOrPassword
-  let response = await EmailPassword.updateEmailOrPassword({
-    userId,
-    password: updatedPassword,
-  });
-
-  if (!response) {
-    return res.status(500);
+  let result;
+  
+  try {
+    result = await EmailPassword.updateEmailOrPassword({
+      userId,
+      password: updatedPassword,
+    });
+  } catch (error) {
+    return res.status(500).send("Terjadi error saat mengganti password");
   }
 
   return res.status(200).json({ message: "Successfully Changing password!" });
