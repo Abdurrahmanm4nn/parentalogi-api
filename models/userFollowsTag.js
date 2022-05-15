@@ -29,7 +29,6 @@ const UserFollowsTag = sequelize.define(
   {
     timestamps: false,
     incrementMe: { type: Sequelize.INTEGER, autoIncrement: false },
-    freezeTableName: true,
   }
 );
 
