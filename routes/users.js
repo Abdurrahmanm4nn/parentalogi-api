@@ -16,6 +16,7 @@ const cookieParser = require('cookie-parser');
 let app = express();
 const fetch = require("fetch-base64");
 const getProfilePicture = require("./../utils/photoUpload");
+const { body, param, validationResult } = require("express-validator");
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
@@ -56,43 +57,59 @@ router.get("/profile", verifySession(), async (req, res) => {
   }
   return res.status(200).json(profile[0]);
 });
-router.put("/edit-profile", verifySession(), async (req, res) => {
-  let userId = req.session.getUserId();
-  let data;
+router.put(
+  "/edit-profile", 
+  body("nama_pengguna").exists({ checkFalsy: true }).isString(),
+  body("nama").exists({ checkFalsy: true }).isString(),
+  body("bio").if(body("bio").notEmpty()).isString(),
+  body("tanggal_lahir").if(body("tanggal_lahir").notEmpty()).isISO8601().toDate(),
+  body("domisili").if(body("domisili").notEmpty()).isString(),
+  body("pekerjaan").if(body("pekerjaan").notEmpty()).isString(),
+  verifySession(), 
+  async (req, res) => {
+    // ------------------ validation -------------------------
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // -------------------------------------------------------
+    
+    let userId = req.session.getUserId();
+    let data;
 
-  const { nama_pengguna, nama, bio, tanggal_lahir, domisili, pekerjaan } =
-    req.body;
-  const nameURLParsed = nama.toLowerCase().replace(/\s+/g, "-");
-  const base64AnonProfilePicture = await fetch.remote(
-    `https://avatars.dicebear.com/api/initials/${nameURLParsed}.png`
-  );
-  const profilePictureFilename = getProfilePicture(
-    req.body.profilePicture || base64AnonProfilePicture[0],
-    "avatar"
-  );
-
-  try {
-    data = await Users.update(
-      {
-        nama_pengguna: nama_pengguna,
-        nama: nama,
-        bio: bio,
-        tanggal_lahir: tanggal_lahir,
-        domisili: domisili,
-        pekerjaan: pekerjaan,
-        foto_profil: profilePictureFilename,
-      },
-      {
-        where: {
-          user_id: userId,
-        },
-      }
+    const { nama_pengguna, nama, bio, tanggal_lahir, domisili, pekerjaan } =
+      req.body;
+    const nameURLParsed = nama.toLowerCase().replace(/\s+/g, "-");
+    const base64AnonProfilePicture = await fetch.remote(
+      `https://avatars.dicebear.com/api/initials/${nameURLParsed}.png`
     );
-  } catch (e) {
-    return res.status(500).send(e);
-  }
-  return res.status(200).json({ message: "Successfully Updating Profile!" });
-});
+    const profilePictureFilename = getProfilePicture(
+      req.body.profilePicture || base64AnonProfilePicture[0],
+      "avatar"
+    );
+
+    try {
+      data = await Users.update(
+        {
+          nama_pengguna: nama_pengguna,
+          nama: nama,
+          bio: bio,
+          tanggal_lahir: tanggal_lahir,
+          domisili: domisili,
+          pekerjaan: pekerjaan,
+          foto_profil: profilePictureFilename,
+        },
+        {
+          where: {
+            user_id: userId,
+          },
+        }
+      );
+    } catch (e) {
+      return res.status(500).send(e);
+    }
+    return res.status(200).json({ message: "Successfully Updating Profile!" });
+  });
 router.put("/change-password", verifySession(), async (req, res) => {
   let session = req.session;
   // get the user's Id from the session
@@ -109,12 +126,12 @@ router.put("/change-password", verifySession(), async (req, res) => {
   let isPasswordValid = await EmailPassword.signIn(userInfo.email, oldPassword);
   if (isPasswordValid.status !== "OK") {
     // TODO: handle incorrect password error
-    return res.status(401).send("Password lama yang anda masukkan salah!");
+    return res.status(400).send("Password lama yang anda masukkan salah!");
   }
 
   // update the user's password using updateEmailOrPassword
   let result;
-  
+
   try {
     result = await EmailPassword.updateEmailOrPassword({
       userId,
@@ -126,70 +143,88 @@ router.put("/change-password", verifySession(), async (req, res) => {
 
   return res.status(200).json({ message: "Successfully Changing password!" });
 });
-router.post('/:username/follow', verifySession(), async (req, res) => {
-  // get the supertokens session object from the req
-  let session = req.session;
-  // get the user's Id from the session
-  let userId = session.getUserId();
-  let userNameToFollow = req.params.username;
-  let userHasAlreadyFollowed;
+router.post(
+  '/:username/follow',
+  param("username")
+    .isString()
+    .custom(async (value) => {
+      const usernameExists = await Users.findOne({ where: { nama_pengguna: value } });
+      if (!usernameExists) throw new Error("Nama pengguna yang dicari tidak ditemukan!");
+      else return true;
+    }), 
+  verifySession(), 
+  async (req, res) => {
+    // ------------------ validation -------------------------
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // -------------------------------------------------------
+    
+    // get the supertokens session object from the req
+    let session = req.session;
+    // get the user's Id from the session
+    let userId = session.getUserId();
+    let userNameToFollow = req.params.username;
+    let userHasAlreadyFollowed;
 
-  try {
-    let designatedUserId = await Users.findAll({
-      where: {
-        nama_pengguna: userNameToFollow
-      },
-      attributes: ['user_id']
-    });
-    let toFollow = designatedUserId[0].getDataValue("user_id");
-    userHasAlreadyFollowed = await FollowsUser.findOne({
-      where: { id_pengikut: userId, id_diikuti: toFollow },
-    });
-    // check whether the user has already liked the comment
-    if (userHasAlreadyFollowed === null) {
-      // start transaction
-      const result = await sequelize.transaction(async (t) => {
-
-        const followingUser = await FollowsUser.create(
-          {
-            id_pengikut: userId,
-            id_diikuti: toFollow
-          },
-          { transaction: t }
-        );
-
-        return followingUser;
+    try {
+      let designatedUserId = await Users.findAll({
+        where: {
+          nama_pengguna: userNameToFollow
+        },
+        attributes: ['user_id']
       });
+      let toFollow = designatedUserId[0].getDataValue("user_id");
+      userHasAlreadyFollowed = await FollowsUser.findOne({
+        where: { id_pengikut: userId, id_diikuti: toFollow },
+      });
+      // check whether the user has already liked the comment
+      if (userHasAlreadyFollowed === null) {
+        // start transaction
+        const result = await sequelize.transaction(async (t) => {
 
-      if (!result)
-        return res.status(400).json({ message: "Following user failed!" });
-    } else {
-      // start transaction
-      const result = await sequelize.transaction(async (t) => {
-
-        const unfollowingUser = await FollowsUser.destroy(
-          {
-            where: {
+          const followingUser = await FollowsUser.create(
+            {
               id_pengikut: userId,
               id_diikuti: toFollow
-            }
-          },
-          { transaction: t }
-        );
+            },
+            { transaction: t }
+          );
 
-        return unfollowingUser;
-      });
-      if (!result)
-        return res.status(400).json({ message: "Unfollowing user failed!" });
+          return followingUser;
+        });
+
+        if (!result)
+          return res.status(400).json({ message: "Following user failed!" });
+      } else {
+        // start transaction
+        const result = await sequelize.transaction(async (t) => {
+
+          const unfollowingUser = await FollowsUser.destroy(
+            {
+              where: {
+                id_pengikut: userId,
+                id_diikuti: toFollow
+              }
+            },
+            { transaction: t }
+          );
+
+          return unfollowingUser;
+        });
+        if (!result)
+          return res.status(400).json({ message: "Unfollowing user failed!" });
+      }
+    } catch (e) {
+      return res.status(500).send(e);
     }
-  } catch (e) {
-    return res.status(500).send(e);
+    const msg = `Successfully ${
+      userHasAlreadyFollowed === null ? "following" : "unfollowing"
+    } user!`;
+    return res.status(200).json({ message: msg });
   }
-  const msg = `Successfully ${
-    userHasAlreadyFollowed === null ? "following" : "unfollowing"
-  } user!`;
-  return res.status(200).json({ message: msg });
-});
+);
 router.get("/reading-list", verifySession(), async (req, res) => {
   // get the supertokens session object from the req
   let session = req.session;
@@ -280,46 +315,64 @@ router.get("/followed-tags", verifySession(), async (req, res) => {
 
   return res.status(200).json(result);
 });
-router.get("/:username", verifySession({sessionRequired: false}), async (req, res) => {
-  let result;
-  let following;
-  let followedBy;
-  let userId;
-  let username = req.params.username;
+router.get(
+  "/:username", 
+  param("username")
+    .isString()
+    .custom(async (value) => {
+      const usernameExists = await Users.findOne({ where: { nama_pengguna: value } });
+      if (!usernameExists) throw new Error("Nama pengguna yang dicari tidak ditemukan!");
+      else return true;
+    }),
+  verifySession({sessionRequired: false}), 
+  async (req, res) => {
+    // ------------------ validation -------------------------
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // -------------------------------------------------------
+    
+    let result;
+    let following;
+    let followedBy;
+    let userId;
+    let username = req.params.username;
 
-  try {
-    result = await Users.scope("profile").findAll({
-      where: {
-        nama_pengguna: username
-      },
-    });
-    userId = await Users.findAll({
-      where: {
-        nama_pengguna: username
-      },
-      attributes: ['user_id']
-    });
-    following = await FollowsUser.count({
-      where: {
-        id_pengikut: userId[0].getDataValue("user_id")
-      }
-    });
-    followedBy = await FollowsUser.count({
-      where: {
-        id_diikuti: userId[0].getDataValue("user_id")
-      }
-    });
-    result[0].setDataValue("following", following);
-    result[0].setDataValue("followedBy", followedBy);
-  } catch (error) {
-    return res.status(500).send({
-      "What happened": "Error occured while retrieving profile data for this user!",
-      "Error": error
-    });
+    try {
+      result = await Users.scope("profile").findAll({
+        where: {
+          nama_pengguna: username
+        },
+      });
+      userId = await Users.findAll({
+        where: {
+          nama_pengguna: username
+        },
+        attributes: ['user_id']
+      });
+      following = await FollowsUser.count({
+        where: {
+          id_pengikut: userId[0].getDataValue("user_id")
+        }
+      });
+      followedBy = await FollowsUser.count({
+        where: {
+          id_diikuti: userId[0].getDataValue("user_id")
+        }
+      });
+      result[0].setDataValue("following", following);
+      result[0].setDataValue("followedBy", followedBy);
+    } catch (error) {
+      return res.status(500).send({
+        "What happened": "Error occured while retrieving profile data for this user!",
+        "Error": error
+      });
+    }
+
+    return res.status(200).json(result[0]);
   }
-
-  return res.status(200).json(result[0]);
-});
+);
 
 // Add this AFTER all your routes
 app.use(supertoken.errorHandler());

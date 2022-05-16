@@ -75,7 +75,7 @@ function slugify(text) {
   return text;
 }
 
-router.get("/", async function (req, res, next) {
+router.get("/", async (req, res, next) => {
   let data;
   let query = req.query;
 
@@ -150,30 +150,48 @@ router.get("/", async function (req, res, next) {
   return res.status(200).json(data);
 });
 
-router.get("/:slug/comments", async function (req, res) {
-  const slug = req.params.slug;
-  let data;
+router.get(
+  "/:slug/comments",
+  param("slug")
+    .isSlug()
+    .custom(async (value) => {
+      const slugExists = await Posts.findOne({ where: { slug: value } });
+      if (!slugExists) throw new Error("Slug doesn't exist!");
+      else return true;
+    }), 
+  async (req, res) => {
+    // ------------------ validation -------------------------
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // -------------------------------------------------------
 
-  try {
-    const post = await getPost(null, slug);
-    data = await Comments.findAll({
-      where: {
-        id_post: post.id,
-      },
-    });
-    for (const key in data) {
-      let commenterData = await Users.scope("comments").findOne({
+    const slug = req.params.slug;
+    let data;
+
+    try {
+      const post = await getPost(null, slug);
+      data = await Comments.findAll({
         where: {
-          user_id: data[key].getDataValue("id_penulis"),
+          id_post: post.id,
         },
       });
-      data[key].setDataValue("data_penulis", commenterData);
+      for (const key in data) {
+        let commenterData = await Users.scope("comments").findOne({
+          where: {
+            user_id: data[key].getDataValue("id_penulis"),
+          },
+        });
+        data[key].setDataValue("data_penulis", commenterData);
+      }
+    } catch (e) {
+      return res.status(500).send(e);
     }
-  } catch (e) {
-    return res.status(500).send(e);
+    
+    return res.status(200).json(data);
   }
-  return res.status(200).json(data);
-});
+);
 
 router.post(
   "/",
@@ -224,26 +242,43 @@ router.post(
   }
 );
 
-router.get("/:slug", async function (req, res, next) {
-  const slug = req.params.slug;
-  let data;
+router.get(
+  "/:slug", 
+  param("slug")
+    .isSlug()
+    .custom(async (value) => {
+      const slugExists = await Posts.findOne({ where: { slug: value } });
+      if (!slugExists) throw new Error("Slug doesn't exist!");
+      else return true;
+    }),
+  async (req, res, next) => {
+    // ------------------ validation -------------------------
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // -------------------------------------------------------
+    
+    const slug = req.params.slug;
+    let data;
 
-  try {
-    data = await getPost(null, slug);
-    let postCreatorData = await Users.scope("comments").findOne({
-      where: {
-        user_id: data.id_penulis,
-      },
-    });
-    data.setDataValue("user", postCreatorData);
-  } catch (e) {
-    console.log(data);
-    console.log(e);
-    res.status(500).send(e);
+    try {
+      data = await getPost(null, slug);
+      let postCreatorData = await Users.scope("comments").findOne({
+        where: {
+          user_id: data.id_penulis,
+        },
+      });
+      data.setDataValue("user", postCreatorData);
+    } catch (e) {
+      console.log(data);
+      console.log(e);
+      res.status(500).send(e);
+    }
+
+    return res.status(200).json(data);
   }
-
-  return res.status(200).json(data);
-});
+);
 
 router.put(
   "/:slug",
