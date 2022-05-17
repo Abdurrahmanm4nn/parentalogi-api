@@ -95,7 +95,7 @@ router.get("/", async (req, res, next) => {
           },
           {
             model: Users,
-            attributes: ['nama_pengguna', 'nama']
+            attributes: ['nama_pengguna', 'nama', 'foto_profil']
           },
         ],
       });
@@ -114,7 +114,7 @@ router.get("/", async (req, res, next) => {
           },
           {
             model: Users,
-            attributes: ['nama_pengguna', 'nama']
+            attributes: ['nama_pengguna', 'nama', 'foto_profil']
           }
         ],
       });
@@ -138,7 +138,7 @@ router.get("/", async (req, res, next) => {
           },
           {
             model: Users,
-            attributes: ['nama_pengguna', 'nama']
+            attributes: ['nama_pengguna', 'nama', 'foto_profil']
           },
         ],
       });
