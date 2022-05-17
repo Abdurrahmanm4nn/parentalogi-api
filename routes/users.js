@@ -44,28 +44,28 @@ router.get("/profile", verifySession(), async (req, res) => {
         id_diikuti: userId
       }
     });
-    let userData = await Users.scope("profile").findAll({
+    let userData = await Users.scope("profile").findOne({
       where: {
         user_id: userId,
       },
     });
-    userData[0].setDataValue("following", following);
-    userData[0].setDataValue("followedBy", followedBy);
+    userData.setDataValue("following", following);
+    userData.setDataValue("followedBy", followedBy);
     profile = userData;
   } catch (e) {
     return res.status(500).send(e);
   }
-  return res.status(200).json(profile[0]);
+  return res.status(200).json(profile);
 });
 router.put(
-  "/edit-profile", 
+  "/edit-profile",
   body("nama_pengguna").exists({ checkFalsy: true }).isString(),
   body("nama").exists({ checkFalsy: true }).isString(),
   body("bio").if(body("bio").notEmpty()).isString(),
   body("tanggal_lahir").if(body("tanggal_lahir").notEmpty()).isISO8601().toDate(),
   body("domisili").if(body("domisili").notEmpty()).isString(),
   body("pekerjaan").if(body("pekerjaan").notEmpty()).isString(),
-  verifySession(), 
+  verifySession(),
   async (req, res) => {
     // ------------------ validation -------------------------
     const errors = validationResult(req);
@@ -73,7 +73,7 @@ router.put(
       return res.status(400).json({ errors: errors.array() });
     }
     // -------------------------------------------------------
-    
+
     let userId = req.session.getUserId();
     let data;
 
@@ -84,7 +84,7 @@ router.put(
       `https://avatars.dicebear.com/api/initials/${nameURLParsed}.png`
     );
     const profilePictureFilename = getProfilePicture(
-      req.body.profilePicture || base64AnonProfilePicture[0],
+      req.body.foto_profil || base64AnonProfilePicture[0],
       "avatar"
     );
 
@@ -151,8 +151,8 @@ router.post(
       const usernameExists = await Users.findOne({ where: { nama_pengguna: value } });
       if (!usernameExists) throw new Error("Nama pengguna yang dicari tidak ditemukan!");
       else return true;
-    }), 
-  verifySession(), 
+    }),
+  verifySession(),
   async (req, res) => {
     // ------------------ validation -------------------------
     const errors = validationResult(req);
@@ -160,7 +160,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
     // -------------------------------------------------------
-    
+
     // get the supertokens session object from the req
     let session = req.session;
     // get the user's Id from the session
@@ -316,7 +316,7 @@ router.get("/followed-tags", verifySession(), async (req, res) => {
   return res.status(200).json(result);
 });
 router.get(
-  "/:username", 
+  "/:username",
   param("username")
     .isString()
     .custom(async (value) => {
@@ -324,7 +324,7 @@ router.get(
       if (!usernameExists) throw new Error("Nama pengguna yang dicari tidak ditemukan!");
       else return true;
     }),
-  verifySession({sessionRequired: false}), 
+  verifySession({sessionRequired: false}),
   async (req, res) => {
     // ------------------ validation -------------------------
     const errors = validationResult(req);
@@ -332,7 +332,7 @@ router.get(
       return res.status(400).json({ errors: errors.array() });
     }
     // -------------------------------------------------------
-    
+
     let result;
     let following;
     let followedBy;
