@@ -158,7 +158,7 @@ router.get(
       const slugExists = await Posts.findOne({ where: { slug: value } });
       if (!slugExists) throw new Error("Slug doesn't exist!");
       else return true;
-    }), 
+    }),
   async (req, res) => {
     // ------------------ validation -------------------------
     const errors = validationResult(req);
@@ -188,7 +188,7 @@ router.get(
     } catch (e) {
       return res.status(500).send(e);
     }
-    
+
     return res.status(200).json(data);
   }
 );
@@ -243,7 +243,7 @@ router.post(
 );
 
 router.get(
-  "/:slug", 
+  "/:slug",
   param("slug")
     .isSlug()
     .custom(async (value) => {
@@ -258,7 +258,7 @@ router.get(
       return res.status(400).json({ errors: errors.array() });
     }
     // -------------------------------------------------------
-    
+
     const slug = req.params.slug;
     let data;
 
@@ -316,33 +316,23 @@ router.put(
     let data;
 
     try {
-      const result = await sequelize.transaction(async (t) => {
-        const postId = await Posts.destroy(
-          {
-            where: {
-              slug: slug,
-            },
+      await Posts.update(
+        {
+          slug: newSlug,
+          judul: postTitle,
+          isi_text: postContent,
+          foto_cover: postCover,
+        },
+        {
+          where: {
+            slug: slug,
           },
-          { transaction: t }
-        );
-
-        data = await Posts.create(
-          {
-            id_penulis: userId,
-            slug: newSlug,
-            judul: postTitle,
-            isi_text: postContent,
-            foto_cover: postCover,
-          },
-          { transaction: t }
-        );
-
-        return { ...postId, ...data };
-      });
-      for (const tag of tags) {
-        await data.addTag(tag);
-      }
+        }
+      );
+      data = await Posts.findOne({ where: {slug: newSlug} });
+      await data.setTags(tags);
     } catch (e) {
+      console.log(e);
       return res.status(500).send(e);
     }
 
