@@ -62,7 +62,7 @@ router.post(
       if (!postExists) throw new Error("Post is not found!");
       else return true;
     }),
-  body("orangtua").exists({ checkFalsy: true}).isInt(),
+  body("orangtua").exists({ checkNull: true}).isInt(),
   body("isiText").notEmpty(), 
   verifySession(), 
   async (req, res) => {
