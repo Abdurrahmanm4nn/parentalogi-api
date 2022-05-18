@@ -153,45 +153,58 @@ supertokens.init({
               if (originalImplementation.signUpPOST === undefined) {
                 throw Error("Should never come here");
               }
-              // First we call the original implementation of signUpPOST.
-              let response = await originalImplementation.signUpPOST(input);
+             
+              //values from the forms
+              const formFields = input.formFields;
+              const nama_pengguna = formFields.filter((f) => f.id === "nama_pengguna")[0].value;
+              const nama = formFields.filter((f) => f.id === "nama")[0].value;
 
-              // Post sign up response, we check if it was successful
-              if (response.status === "OK") {
-                // // These are the input form fields values that the user used while signing up
-                let formFields = input.formFields;
-                try {
-                  const nama = formFields.filter((f) => f.id === "nama")[0]
-                    .value;
-                  const nameURLParsed = nama.toLowerCase().replace(/\s+/g, "-");
-                  const base64AnonProfilePicture = await fetch.remote(
-                    `https://avatars.dicebear.com/api/initials/${nameURLParsed}.png`
-                  );
-                  const profilePictureFilename = getProfilePicture(
-                    base64AnonProfilePicture[0],
-                    "avatar"
-                  );
-                  Users.update(
-                    {
-                      nama_pengguna: formFields.filter(
-                        (f) => f.id === "nama_pengguna"
-                      )[0].value,
-                      nama: nama,
-                      foto_profil: profilePictureFilename,
-                      status: "ACTIVE",
-                    },
-                    {
-                      where: {
-                        email: formFields.filter((f) => f.id === "email")[0]
-                          .value,
-                      },
-                    }
-                  );
-                } catch (e) {
-                  return express.response.status(500).send(e);
+              //check whether username is taken
+              let isUsernameExists = await Users.findOne({
+                where: {
+                  nama_pengguna: nama_pengguna
                 }
+              });
+
+              //if no same username found, signup should success
+              if (!isUsernameExists){
+                // First we call the original implementation of signUpPOST.
+                let response = await originalImplementation.signUpPOST(input);
+
+                // Post sign up response, we check if it was successful
+                if (response.status === "OK") {
+                  try {
+                    const nameURLParsed = nama.toLowerCase().replace(/\s+/g, "-");
+                    const base64AnonProfilePicture = await fetch.remote(
+                      `https://avatars.dicebear.com/api/initials/${nameURLParsed}.png`
+                    );
+                    const profilePictureFilename = getProfilePicture(
+                      base64AnonProfilePicture[0],
+                      "avatar"
+                    );
+                    Users.update(
+                      {
+                        nama_pengguna: nama_pengguna,
+                        nama: nama,
+                        foto_profil: profilePictureFilename,
+                        status: "ACTIVE",
+                      },
+                      {
+                        where: {
+                          email: formFields.filter((f) => f.id === "email")[0]
+                            .value,
+                        },
+                      }
+                    );
+                  } catch (e) {
+                    return express.response.status(500).send(e);
+                  }
+                }
+                return response;
               }
-              return response;
+
+              //if not, throw this error
+              throw Error("Username is already taken");
             },
           };
         },
