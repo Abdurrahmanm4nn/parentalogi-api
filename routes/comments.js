@@ -157,7 +157,6 @@ router.put(
 
 router.put(
   "/:comment_id/upvote",
-  body("isiText").notEmpty(),
   param("comment_id")
     .isInt()
     .custom(async (value) => {
