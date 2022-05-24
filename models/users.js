@@ -23,6 +23,11 @@ const Users = sequelize.define("users", {
     type: Sequelize.ENUM("ACTIVE", "BANNED", "DELETED", ""),
     allowNull: false,
   },
+  role: {
+    type: Sequelize.ENUM('USER', 'ADMIN'),
+    allowNull: false,
+    defaultValue: 'USER'
+  },
 });
 
 Users.addScope("profile", {
