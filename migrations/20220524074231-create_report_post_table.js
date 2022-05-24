@@ -13,7 +13,6 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false
       },
-      reason: { type: Sequelize.TEXT, allowNull: false },
       createdAt: { type: Sequelize.DATE, allowNull: false },
       updatedAt: { type: Sequelize.DATE, allowNull: false },
     });
