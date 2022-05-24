@@ -38,3 +38,7 @@ router.get("/", verifySession(), async (req, res) => {
 
     return res.status(200).json(reportedPost);
 });
+
+app.use(supertoken.errorHandler());
+
+module.exports = router;
