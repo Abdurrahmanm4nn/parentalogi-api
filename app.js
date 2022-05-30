@@ -210,24 +210,6 @@ supertokens.init({
         },
       },
     }), // initializes signin / sign up features
-    Session.init({
-      override: {
-        functions: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            createNewSession: async function (input) {
-              const userId = input.userId;
-              const user = getUserById(userId);
-              input.accessTokenPayload = {
-                ...input.accessTokenPayload,
-                user,
-              };
-              return originalImplementation.createNewSession(input);
-            },
-          };
-        },
-      },
-    }), // initializes session features
   ],
 });
 
