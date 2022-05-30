@@ -210,6 +210,7 @@ supertokens.init({
         },
       },
     }), // initializes signin / sign up features
+    Session.init(),
   ],
 });
 
